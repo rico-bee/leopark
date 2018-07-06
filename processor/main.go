@@ -1,7 +1,7 @@
 package main
 
 import (
-	transactions "bitbucket.org/riczha/marketplace/processor/transactions"
+	transactions "github.com/rico-bee/marketplace/processor/transactions"
 	processorSdk "github.com/hyperledger/sawtooth-sdk-go/processor"
 	"log"
 )

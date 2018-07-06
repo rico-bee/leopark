@@ -1,8 +1,8 @@
 package rpc
 
 import (
-	pb "bitbucket.org/riczha/marketplace/market_service/proto/api"
-	"bitbucket.org/riczha/marketplace/market_service/transaction"
+	pb "github.com/rico-bee/marketplace/market_service/proto/api"
+	"github.com/rico-bee/marketplace/market_service/transaction"
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

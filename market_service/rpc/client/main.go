@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	pb "bitbucket.org/riczha/marketplace/market_service/proto/api"
+	pb "github.com/rico-bee/marketplace/market_service/proto/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

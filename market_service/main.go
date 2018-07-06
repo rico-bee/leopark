@@ -1,7 +1,7 @@
 package main
 
 import (
-	rpc "bitbucket.org/riczha/marketplace/market_service/rpc"
+	rpc "github.com/rico-bee/marketplace/market_service/rpc"
 	"fmt"
 	"github.com/alecthomas/kingpin"
 	"os"

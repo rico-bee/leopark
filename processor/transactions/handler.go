@@ -1,7 +1,7 @@
 package transactions
 
 import (
-	addresser "bitbucket.org/riczha/marketplace/address"
+	addresser "github.com/rico-bee/marketplace/address"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
 	"log"

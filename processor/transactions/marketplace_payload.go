@@ -1,7 +1,7 @@
 package transactions
 
 import (
-	pb "bitbucket.org/riczha/marketplace/market"
+	pb "github.com/rico-bee/marketplace/market"
 	proto "github.com/golang/protobuf/proto"
 	"log"
 )

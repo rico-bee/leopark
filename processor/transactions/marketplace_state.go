@@ -1,8 +1,8 @@
 package transactions
 
 import (
-	addresser "bitbucket.org/riczha/marketplace/address"
-	pb "bitbucket.org/riczha/marketplace/market"
+	addresser "github.com/rico-bee/marketplace/address"
+	pb "github.com/rico-bee/marketplace/market"
 	"errors"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"

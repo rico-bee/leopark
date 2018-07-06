@@ -1,7 +1,7 @@
 package transactions
 
 import (
-	pb "bitbucket.org/riczha/marketplace/market"
+	pb "github.com/rico-bee/marketplace/market"
 	"errors"
 	"fmt"
 	pb2 "github.com/hyperledger/sawtooth-sdk-go/protobuf/transaction_pb2"
