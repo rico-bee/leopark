@@ -1,18 +1,17 @@
 package transactions
 
 import (
-	pb "github.com/rico-bee/marketplace/market"
 	"errors"
 	"fmt"
 	pb2 "github.com/hyperledger/sawtooth-sdk-go/protobuf/transaction_pb2"
+	pb "github.com/rico-bee/leopark/market"
 	"log"
 )
 
-func handleAssetCreation(createAsset *pb.CreateAsset, header *pb2.TransactionHeader,
-	state *MarketState) ([]string, error) {
+func handleAssetCreation(createAsset *pb.CreateAsset, header *pb2.TransactionHeader, state *MarketState) ([]string, error) {
 	acc, err := state.GetAccount(header.SignerPublicKey)
 	if err != nil {
-		log.Println("cannot get account")
+		log.Println("cannot find account")
 	}
 	if acc == nil {
 		msg := fmt.Sprintf("Account with public key %s doesn't exists", header.SignerPublicKey)

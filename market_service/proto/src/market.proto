@@ -1,0 +1,123 @@
+// Copyright 2015 gRPC authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package rpc;
+
+// The greeting service definition.
+service market {
+  // create account 
+  rpc doCreateAccount (CreateAccountRequest) returns (CreateAccountResponse) {}
+  // create asset 
+  rpc doCreateAsset (CreateAssetRequest) returns (CreateAssetResponse) {}
+  // create holding
+  rpc doCreateHolding (CreateHoldingRequest) returns (CreateHoldingResponse) {}
+  rpc doCreateOffer (CreateOfferRequest) returns (CreateOfferResponse) {}
+  rpc doAcceptOffer (AcceptOfferRequest) returns (AcceptOfferResponse) {}
+  rpc doCloseOffer (CloseOfferRequest) returns (CloseOfferResponse) {}
+}
+
+// The request message containing the user's name.
+message CreateAccountRequest {
+  string name = 1;
+  string email = 2;
+}
+
+// The response message containing the greetings
+message CreateAccountResponse {
+  string token = 1;
+}
+
+message AssetRule {
+  int32 type = 1;
+  string value = 2; 
+}
+
+// The request message containing the user's name.
+message CreateAssetRequest {
+  string name = 1;
+  string description = 2;
+  repeated AssetRule rules = 3;
+  string token = 4;
+}
+
+// The response message containing the greetings
+message CreateAssetResponse {
+  string message = 1;
+}
+
+// The request message containing the user's name.
+message CreateHoldingRequest {
+  string identifier = 1;
+  string label = 2;
+  string descrption = 3;
+  string account = 4;
+  string asset = 5;
+  int64 quantity = 6;
+  string token = 7;
+}
+
+// The response message containing the greetings
+message CreateHoldingResponse {
+  string message = 1;
+}
+
+message MarketplaceHolding {
+  string holdingId = 1;
+  int64  quantity = 2;
+  string asset = 3;
+}
+
+message OfferParticipant {
+  string SrcHolding = 1;
+  string TargetHolding = 2;
+  string SrcAsset = 3;
+  string TargetAsset = 4;
+}
+
+message CreateOfferRequest {
+  string identifier = 1;
+  string label = 2;
+  string description = 3;
+  MarketplaceHolding source = 4;
+  MarketplaceHolding target = 5;
+  repeated AssetRule rules = 6;
+  string token = 7;
+}
+
+message CreateOfferResponse {
+  string message = 1;
+}
+
+message AcceptOfferRequest {
+  string identifier = 1;
+  OfferParticipant sender = 2;
+  OfferParticipant receiver = 3;
+  int64 count = 4;
+  string token = 5;
+}
+
+message AcceptOfferResponse {
+  string message = 1;  
+}
+
+message CloseOfferRequest {
+  string id = 1;
+  string token = 4;
+}
+
+message CloseOfferResponse {
+  string message = 1;
+}

@@ -1,9 +1,9 @@
 package transactions
 
 import (
-	addresser "github.com/rico-bee/marketplace/address"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
+	addresser "github.com/rico-bee/leopark/address"
 	"log"
 )
 

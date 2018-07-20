@@ -1,10 +1,10 @@
 package transactions
 
 import (
-	pb "github.com/rico-bee/marketplace/market"
 	"errors"
 	"fmt"
 	pb2 "github.com/hyperledger/sawtooth-sdk-go/protobuf/transaction_pb2"
+	pb "github.com/rico-bee/leopark/market"
 	"log"
 	"strings"
 )

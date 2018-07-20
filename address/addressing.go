@@ -63,23 +63,21 @@ const (
 
 func hash512(identifier string) string {
 	shaBytes := sha512.Sum512_256([]byte(identifier))
-	return string(shaBytes[:])
+	return hex.EncodeToString(shaBytes[:])
 }
 
 func compress(address string, start Range, stop Range) string {
-	log.Println("address hash is:" + address)
-	addressHex, err := strconv.ParseInt(address, 16, 64)
+	digest := address[:4]
+	addressHex, err := strconv.ParseInt(digest, 16, 64)
 	if err != nil {
 		log.Fatal("Invliad address" + err.Error())
 	}
-
 	return fmt.Sprintf("%.2X", addressHex%int64(stop-start)+int64(start))
 }
 
 func MakeOfferAccountAddress(offerId, account string) string {
 	offerHash := hash512(offerId)
 	accountHash := hash512(account)
-
 	return FamilyName + "00" + offerHash[:60] + compress(accountHash, 1, 256)
 }
 
@@ -99,9 +97,8 @@ func MakeHoldingAddress(holdingId string) string {
 }
 
 func MakeAccountAddress(accountId string) string {
-	hash := HexDigest(accountId)
-	log.Println("hash str:" + hash)
-	return NS + hash[:64]
+	hash := hash512(accountId)
+	return NS + compress(hash, AccountStart, AccountEnd) + hash[:62]
 }
 
 func MakeOfferAddress(offerId string) string {

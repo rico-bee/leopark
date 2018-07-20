@@ -1,8 +1,8 @@
 package main
 
 import (
-	transactions "github.com/rico-bee/marketplace/processor/transactions"
 	processorSdk "github.com/hyperledger/sawtooth-sdk-go/processor"
+	transactions "github.com/rico-bee/leopark/processor/transactions"
 	"log"
 )
 

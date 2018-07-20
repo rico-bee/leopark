@@ -1,11 +1,11 @@
 package transactions
 
 import (
-	addresser "github.com/rico-bee/marketplace/address"
-	pb "github.com/rico-bee/marketplace/market"
 	"errors"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
+	addresser "github.com/rico-bee/leopark/address"
+	pb "github.com/rico-bee/leopark/market"
 	"log"
 )
 

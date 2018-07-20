@@ -1,9 +1,9 @@
 package main
 
 import (
-	rpc "github.com/rico-bee/marketplace/market_service/rpc"
 	"fmt"
 	"github.com/alecthomas/kingpin"
+	rpc "github.com/rico-bee/leopark/market_service/rpc"
 	"os"
 )
 

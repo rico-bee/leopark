@@ -1,8 +1,6 @@
 package transaction
 
 import (
-	addresser "github.com/rico-bee/marketplace/address"
-	pb "github.com/rico-bee/marketplace/market"
 	"crypto/sha512"
 	"encoding/hex"
 	proto "github.com/golang/protobuf/proto"
@@ -10,6 +8,8 @@ import (
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/batch_pb2"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/transaction_pb2"
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
+	addresser "github.com/rico-bee/leopark/address"
+	pb "github.com/rico-bee/leopark/market"
 	"log"
 )
 
@@ -95,6 +95,161 @@ func CreateAccount(txnKey *Signer, batchKey *Signer, label, description string) 
 	payload := &pb.TransactionPayload{
 		PayloadType:   pb.TransactionPayload_CREATE_ACCOUNT,
 		CreateAccount: createAccount,
+	}
+	data, err := proto.Marshal(payload)
+	if err != nil {
+		log.Fatal("failed to marshal payload")
+	}
+	return makeHeaderAndBatch(data, inputs, outputs, txnKey, batchKey)
+}
+
+func CreateAsset(txnKey, batchKey *Signer, name, description string, rules []*pb.Rule) ([]*batch_pb2.Batch, string) {
+	inputs := []string{addresser.MakeAssetAddress(txnKey.GetPublicKey().AsHex())}
+	outputs := []string{addresser.MakeAssetAddress(txnKey.GetPublicKey().AsHex())}
+
+	createAsset := &pb.CreateAsset{
+		Name:        name,
+		Description: description,
+		Rules:       rules,
+	}
+
+	payload := &pb.TransactionPayload{
+		PayloadType: pb.TransactionPayload_CREATE_ASSET,
+		CreateAsset: createAsset,
+	}
+	data, err := proto.Marshal(payload)
+	if err != nil {
+		log.Fatal("failed to marshal payload")
+	}
+	return makeHeaderAndBatch(data, inputs, outputs, txnKey, batchKey)
+}
+
+func CreateHolding(txnKey, batchKey *Signer, identifier, label, description, asset string, quantity int64) ([]*batch_pb2.Batch, string) {
+	inputs := []string{addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex()), addresser.MakeAssetAddress(asset), addresser.MakeHoldingAddress(identifier)}
+	outputs := []string{addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex()), addresser.MakeHoldingAddress(txnKey.GetPublicKey().AsHex())}
+
+	createHolding := &pb.CreateHolding{
+		Id:          identifier,
+		Label:       label,
+		Description: description,
+		Asset:       asset,
+		Quantity:    quantity,
+	}
+	payload := &pb.TransactionPayload{
+		PayloadType:   pb.TransactionPayload_CREATE_HOLDING,
+		CreateHolding: createHolding,
+	}
+	data, err := proto.Marshal(payload)
+	if err != nil {
+		log.Fatal("failed to marshal payload")
+	}
+	return makeHeaderAndBatch(data, inputs, outputs, txnKey, batchKey)
+}
+
+type MarketplaceHolding struct {
+	HoldingId string `json:"holdingId,omitempty"`
+	Quantity  int64  `json:"quantity,omitempty"`
+	Asset     string `json:"asset,omitempty"`
+}
+
+func CreateOffer(txnKey, batchKey *Signer, identifier, label, description string, source,
+	target *MarketplaceHolding, rules []*pb.Rule) ([]*batch_pb2.Batch, string) {
+	inputs := []string{addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex()),
+		addresser.MakeAssetAddress(source.Asset), addresser.MakeOfferAddress(identifier)}
+	outputs := []string{addresser.MakeOfferAddress(identifier),
+		addresser.MakeHoldingAddress(txnKey.GetPublicKey().AsHex())}
+	if target.HoldingId != "" {
+		inputs = append(inputs, addresser.MakeHoldingAddress(target.HoldingId))
+		inputs = append(inputs, addresser.MakeAssetAddress(target.Asset))
+	}
+
+	createOffer := &pb.CreateOffer{
+		Id:             identifier,
+		Label:          label,
+		Description:    description,
+		Source:         source.HoldingId,
+		SourceQuantity: source.Quantity,
+		Target:         target.HoldingId,
+		TargetQuantity: target.Quantity,
+		Rules:          rules,
+	}
+
+	payload := &pb.TransactionPayload{
+		PayloadType: pb.TransactionPayload_CREATE_OFFER,
+		CreateOffer: createOffer,
+	}
+	data, err := proto.Marshal(payload)
+	if err != nil {
+		log.Fatal("failed to marshal payload")
+	}
+	return makeHeaderAndBatch(data, inputs, outputs, txnKey, batchKey)
+}
+
+type OfferParticipant struct {
+	SrcHolding    string
+	TargetHolding string
+	SrcAsset      string
+	TargetAsset   string
+}
+
+func AcceptOffer(txnKey, batchKey *Signer, identifier string, count uint64,
+	sender, receiver *OfferParticipant) ([]*batch_pb2.Batch, string) {
+	inputs := []string{
+		addresser.MakeHoldingAddress(receiver.TargetHolding),
+		addresser.MakeHoldingAddress(sender.SrcHolding),
+		addresser.MakeAssetAddress(sender.SrcAsset),
+		addresser.MakeAssetAddress(receiver.TargetAsset),
+		addresser.MakeOfferHistoryAddress(identifier),
+		addresser.MakeOfferAccountAddress(identifier, txnKey.GetPublicKey().AsHex()),
+		addresser.MakeOfferAddress(identifier),
+	}
+	outputs := []string{
+		addresser.MakeHoldingAddress(receiver.TargetHolding),
+		addresser.MakeHoldingAddress(sender.SrcHolding),
+		addresser.MakeOfferHistoryAddress(identifier),
+		addresser.MakeOfferAccountAddress(identifier, txnKey.GetPublicKey().AsHex()),
+	}
+
+	if receiver.SrcHolding != "" {
+		inputs = append(inputs, addresser.MakeHoldingAddress(receiver.SrcHolding))
+		inputs = append(inputs, addresser.MakeAssetAddress(receiver.SrcAsset))
+		outputs = append(outputs, addresser.MakeHoldingAddress(receiver.SrcHolding))
+	}
+
+	if sender.TargetHolding != "" {
+		inputs = append(inputs, addresser.MakeHoldingAddress(sender.TargetHolding))
+		inputs = append(inputs, addresser.MakeAssetAddress(sender.TargetAsset))
+		outputs = append(outputs, addresser.MakeHoldingAddress(sender.TargetHolding))
+	}
+	acceptOffer := &pb.AcceptOffer{
+		Id:     identifier,
+		Source: receiver.SrcHolding,
+		Target: receiver.TargetHolding,
+		Count:  count,
+	}
+
+	payload := &pb.TransactionPayload{
+		PayloadType: pb.TransactionPayload_ACCEPT_OFFER,
+		AcceptOffer: acceptOffer,
+	}
+	data, err := proto.Marshal(payload)
+	if err != nil {
+		log.Fatal("failed to marshal payload")
+	}
+	return makeHeaderAndBatch(data, inputs, outputs, txnKey, batchKey)
+}
+
+func CloseOffer(txnKey, batchKey *Signer, identifier string) ([]*batch_pb2.Batch, string) {
+	inputs := []string{addresser.MakeOfferAddress(identifier)}
+
+	outputs := []string{addresser.MakeOfferAddress(identifier)}
+
+	closeOffer := &pb.CloseOffer{
+		Id: identifier,
+	}
+	payload := &pb.TransactionPayload{
+		PayloadType: pb.TransactionPayload_CLOSE_OFFER,
+		CloseOffer:  closeOffer,
 	}
 	data, err := proto.Marshal(payload)
 	if err != nil {

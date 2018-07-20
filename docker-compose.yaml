@@ -24,25 +24,11 @@ services:
         tail -f /dev/null \
         \""
 
-  # market-processor:
-  #   build:
-  #     context: .
-  #     dockerfile: ./processor/Dockerfile
-  #     args:
-  #       - http_proxy
-  #       - https_proxy
-  #       - no_proxy
-  #   image: market-tp
-  #   container_name: market-processor
-  #   volumes:
-  #     - '.:/project/leopark'
-  #   depends_on:
-  #     - market-shell
-  #   command: |
-  #     bash -c "
-  #       sleep 1 &&
-  #       marketplace-tp -v \
-  #         -C tcp://validator:4004"
+  #market-processor:
+  #  image: leopark:market-processor
+  #  container_name: market-processor
+  #  depends_on:
+  #    - market-shell
   # market-rest-api:
   #   build:
   #     context: .
@@ -135,5 +121,11 @@ services:
         sawtooth-validator -vv \
           --endpoint tcp://validator:8800 \
           --bind component:tcp://eth0:4004 \
-          --bind network:tcp://eth0:8800
-      "
+          --bind network:tcp://eth0:8800"
+
+  rethinkdb:
+    image: rethinkdb:latest
+    ports:  
+      - "38080:8080"
+      - "28015:28015"   
+      - "29015:29015"   

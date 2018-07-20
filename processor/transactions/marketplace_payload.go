@@ -1,8 +1,8 @@
 package transactions
 
 import (
-	pb "github.com/rico-bee/marketplace/market"
 	proto "github.com/golang/protobuf/proto"
+	pb "github.com/rico-bee/leopark/market"
 	"log"
 )
 

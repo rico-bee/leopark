@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	pb "github.com/rico-bee/marketplace/market_service/proto/api"
+	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -25,7 +25,7 @@ func main() {
 	c := pb.NewMarketClient(conn)
 
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	r, err := c.DoCreateAccount(ctx, &pb.CreateAccountRequest{Name: name, Email: email})
 	if err != nil {
