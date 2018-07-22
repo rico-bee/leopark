@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"os"
+	"time"
 )
 
 const (
@@ -23,7 +24,7 @@ func main() {
 
 	showversion := kingpin.Flag("version", "Show version information.").Short('v').Bool()
 	// configPath := kingpin.Flag("config", "Optional config file path.").Default("config.user.json").String()
-	debug := kingpin.Flag("debug", "Set logging to debug.").Bool()
+	//debug := kingpin.Flag("debug", "Set logging to debug.").Bool()
 	kingpin.Parse()
 
 	if *showversion == true {
@@ -37,8 +38,11 @@ func main() {
 	}
 	defer conn.Close()
 	c := pb.NewMarketClient(conn)
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 
-	apiServer, err := server.NewServer(version, *debug)
+	apiServer, err := server.NewServer(ctx, c)
 	if err != nil {
 		fmt.Printf("Failed to create Server: %s\n", err.Error())
 		os.Exit(1)

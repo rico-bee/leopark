@@ -10,10 +10,12 @@ import (
 	//	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	"golang.org/x/crypto/bcrypt"
 	"io"
+	"log"
 )
 
 const (
-	AES_KEY string = "ffffffffffffffffffffffffffffffff"
+	AES_KEY     string = "ffffffffffffffffffffffffffffffff"
+	SIGNING_KEY string = "abcdefggfedcbaxyz"
 )
 
 type AuthClaims struct {
@@ -32,31 +34,35 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func GenerateAuthToken(auth *AuthInfo, secret interface{}) (string, error) {
+func GenerateAuthToken(auth *AuthInfo) (string, error) {
+
 	claims := AuthClaims{
 		auth.Email,
 		auth.PublicKey,
 		jwt.StandardClaims{
-			ExpiresAt: 15000,
+			ExpiresAt: 0, // for now, just never expires todo
 			Issuer:    "leopark",
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
-	return token.SignedString(secret)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(SIGNING_KEY))
 }
 
 func ParseAuthToken(tokenString string) (*AuthInfo, error) {
 	claims := &AuthClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("AllYourBase"), nil
+		return []byte(SIGNING_KEY), nil
 	})
 	if claims, ok := token.Claims.(*AuthClaims); ok && token.Valid {
 		authInfo := &AuthInfo{
 			Email:     claims.Email,
 			PublicKey: claims.PublicKey,
 		}
+		log.Println("email:" + authInfo.Email)
 		return authInfo, nil
 	} else {
+		log.Println("failed parse the token:" + err.Error())
 		return nil, err
 	}
 }

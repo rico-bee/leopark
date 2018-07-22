@@ -23,12 +23,6 @@
   revision = "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
 
 [[projects]]
-  name = "github.com/cenkalti/backoff"
-  packages = ["."]
-  revision = "2ea60e5f094469f9e65adb9cd103795b73ae743e"
-  version = "v2.0.0"
-
-[[projects]]
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
@@ -47,10 +41,16 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/hailocab/go-hostpool"
+  name = "github.com/gorilla/context"
   packages = ["."]
-  revision = "e80d13ce29ede4452c43dea11e79b9bc8a15b478"
+  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+  version = "v1.1.1"
+
+[[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "e3702bed27f0d39777b0b37b664b6280e8ef8fbf"
+  version = "v1.6.2"
 
 [[projects]]
   branch = "master"
@@ -91,26 +91,16 @@
   version = "v0.0.3"
 
 [[projects]]
-  name = "github.com/opentracing/opentracing-go"
-  packages = [
-    ".",
-    "ext",
-    "log"
-  ]
-  revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
-  version = "v1.0.2"
-
-[[projects]]
   branch = "master"
   name = "github.com/rico-bee/leopark"
   packages = ["market_service/proto/api"]
-  revision = "509506d83a9f0570bb833d2af2da1373b3098ddd"
+  revision = "94c02867c3f76762df17bb84767e0b54500aa963"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
-  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
-  version = "v1.0.5"
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
 
 [[projects]]
   name = "github.com/spaolacci/murmur3"
@@ -136,10 +126,9 @@
   packages = [
     "acme",
     "acme/autocert",
-    "pbkdf2",
     "ssh/terminal"
   ]
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "a2144134853fc9a27a7b1e3eb4f19f1a76df13c9"
 
 [[projects]]
   branch = "master"
@@ -153,7 +142,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
+  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
 
 [[projects]]
   branch = "master"
@@ -162,7 +151,7 @@
     "unix",
     "windows"
   ]
-  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
+  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -189,7 +178,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "e92b116572682a5b432ddd840aeaba2a559eeff1"
+  revision = "fedd2861243fd1a8152376292b921b394c7bef7e"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -223,26 +212,9 @@
   revision = "168a6198bcb0ef175f7dacec0b8691fc141dc9b8"
   version = "v1.13.0"
 
-[[projects]]
-  name = "gopkg.in/fatih/pool.v2"
-  packages = ["."]
-  revision = "010e0b745d12eaf8426c95f9c3924d81dd0b668f"
-  version = "v2.0.0"
-
-[[projects]]
-  name = "gopkg.in/gorethink/gorethink.v4"
-  packages = [
-    ".",
-    "encoding",
-    "ql2",
-    "types"
-  ]
-  revision = "eec03bd47cfc11965a9de004ff86add2a88e65b0"
-  version = "v4.0.0"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b98e9d1959590c631fa987372f92e3c8612859147f085d4b2724f9424873400d"
+  inputs-digest = "2e38678870c649917a89d7419ed38b902c58e8f54f648c338704ebdb5a73581a"
   solver-name = "gps-cdcl"
   solver-version = 1

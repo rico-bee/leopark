@@ -48,8 +48,7 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 	if err != nil {
 		return nil, err
 	}
-
-	tokenString, err := GenerateAuthToken(authInfo, s.privateKey)
+	tokenString, err := GenerateAuthToken(authInfo)
 	return &pb.CreateAccountResponse{Token: tokenString}, nil
 }
 
