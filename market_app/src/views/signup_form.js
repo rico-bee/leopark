@@ -25,10 +25,10 @@ const api = require('../services/api')
 const accountSubmitter = state => e => {
   e.preventDefault()
 
-  const accountKeys = ['email', 'password', 'label', 'description']
+  const accountKeys = ['email', 'password']
   const account = _.pick(state, accountKeys)
 
-  api.post('accounts', account)
+  api.post('account', account)
     .then(res => api.setAuth(res.authorization))
     .then(() => m.route.set('/'))
     .catch(api.alertError)
@@ -46,8 +46,6 @@ const SignupForm = {
       m('legend', 'Create Account'),
       forms.emailInput(setter('email'), 'Email'),
       forms.passwordInput(setter('password'), 'Password'),
-      forms.textInput(setter('label'), 'Label'),
-      forms.textInput(setter('description'), 'Description'),
       m('.container.text-center',
         'Or you can ',
         m('a[href="/login"]',

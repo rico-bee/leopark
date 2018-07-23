@@ -60,7 +60,7 @@ func (server *Server) Start() {
 	logrus.Println("starting server...")
 	r := mux.NewRouter()
 
-	r.HandleFunc("/register", server.handleRegistration).Methods("POST")
+	r.HandleFunc("/account", server.handleRegistration).Methods("POST")
 	http.ListenAndServe(":8088", r)
 	//Stop Events go here
 	server.logger.Info("We stopped successfully")
