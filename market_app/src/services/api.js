@@ -19,7 +19,7 @@
 const m = require('mithril')
 const _ = require('lodash')
 
-const API_PATH = 'http://localhost:8088'
+const API_PATH = 'http://localhost:8088/'
 const STORAGE_KEY = 'sawbuck_manager.authorization'
 let authToken = null
 
@@ -60,10 +60,10 @@ const getPublicKey = () => {
 // Adds Authorization header and prepends API path to url
 const baseRequest = opts => {
   const Authorization = getAuth()
-  const authHeader = Authorization ? { Authorization } : {}
-  opts.headers = _.assign(opts.headers, authHeader)
+  //const authHeader = Authorization ? { Authorization } : {}
+  const contentType = {"Content-Type": "application/json"}
+  opts.headers = _.assign(opts.headers, contentType)
   opts.url = API_PATH + opts.url
-  console.log(opts.url)
   return m.request(opts)
 }
 

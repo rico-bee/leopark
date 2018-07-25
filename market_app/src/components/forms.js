@@ -52,7 +52,7 @@ const input = (type, onValue, label, required = true) => {
 }
 
 const textInput = _.partial(input, 'text')
-const passwordInput = _.partial(input, 'password')
+const nameInput = _.partial(input, 'name')
 const numberInput = _.partial(input, 'number')
 const emailInput = _.partial(input, 'email')
 
@@ -98,7 +98,7 @@ module.exports = {
   field,
   input,
   textInput,
-  passwordInput,
+  nameInput,
   numberInput,
   emailInput,
   clickIcon,

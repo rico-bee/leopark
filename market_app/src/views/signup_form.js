@@ -25,11 +25,13 @@ const api = require('../services/api')
 const accountSubmitter = state => e => {
   e.preventDefault()
 
-  const accountKeys = ['email', 'password']
+  const accountKeys = ['email', 'name']
   const account = _.pick(state, accountKeys)
 
   api.post('account', account)
-    .then(res => api.setAuth(res.authorization))
+    .then(res => {
+      api.setAuth(res.token)
+    })
     .then(() => m.route.set('/'))
     .catch(api.alertError)
 }
@@ -45,7 +47,7 @@ const SignupForm = {
       m('form', { onsubmit: accountSubmitter(vnode.state) },
       m('legend', 'Create Account'),
       forms.emailInput(setter('email'), 'Email'),
-      forms.passwordInput(setter('password'), 'Password'),
+      forms.nameInput(setter('name'), 'Name'),
       m('.container.text-center',
         'Or you can ',
         m('a[href="/login"]',

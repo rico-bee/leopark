@@ -1,10 +1,10 @@
 package server
 
 import (
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"net/http"
 	_ "net/http/pprof" //Profiling the API
 	"os"
@@ -17,7 +17,6 @@ type Server struct {
 	listenPort  int
 	region      string
 	environment string
-	ctx         context.Context
 	rpcClient   pb.MarketClient
 	logger      *logrus.Logger
 }
@@ -37,7 +36,7 @@ const (
 )
 
 // NewServer Server
-func NewServer(ctx context.Context, rpc pb.MarketClient) (*Server, error) {
+func NewServer(rpc pb.MarketClient) (*Server, error) {
 
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{FullTimestamp: true}
@@ -49,7 +48,6 @@ func NewServer(ctx context.Context, rpc pb.MarketClient) (*Server, error) {
 		profiling:   false,
 		environment: "dev",
 		logger:      logger,
-		ctx:         ctx,
 		rpcClient:   rpc,
 	}
 	return server, nil
@@ -60,8 +58,12 @@ func (server *Server) Start() {
 	logrus.Println("starting server...")
 	r := mux.NewRouter()
 
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
 	r.HandleFunc("/account", server.handleRegistration).Methods("POST")
-	http.ListenAndServe(":8088", r)
+	http.ListenAndServe(":8088", handlers.CORS(originsOk, headersOk, methodsOk)(r))
 	//Stop Events go here
 	server.logger.Info("We stopped successfully")
 }

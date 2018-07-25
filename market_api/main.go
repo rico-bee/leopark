@@ -5,11 +5,9 @@ import (
 	"github.com/alecthomas/kingpin"
 	server "github.com/rico-bee/leopark/market_api/server"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
 	"os"
-	"time"
 )
 
 const (
@@ -39,10 +37,7 @@ func main() {
 	defer conn.Close()
 	c := pb.NewMarketClient(conn)
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	apiServer, err := server.NewServer(ctx, c)
+	apiServer, err := server.NewServer(c)
 	if err != nil {
 		fmt.Printf("Failed to create Server: %s\n", err.Error())
 		os.Exit(1)
