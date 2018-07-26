@@ -20,6 +20,8 @@ package rpc;
 service market {
   // create account 
   rpc doCreateAccount (CreateAccountRequest) returns (CreateAccountResponse) {}
+  // create account 
+  rpc doAuthoriseAccount (AuthoriseAccountRequest) returns (AuthoriseAccountResponse) {}
   // create asset 
   rpc doCreateAsset (CreateAssetRequest) returns (CreateAssetResponse) {}
   // create holding
@@ -33,10 +35,22 @@ service market {
 message CreateAccountRequest {
   string name = 1;
   string email = 2;
+  string password = 3;
 }
 
 // The response message containing the greetings
 message CreateAccountResponse {
+  string token = 1;
+}
+
+// The request message containing the user's name.
+message AuthoriseAccountRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// The request message containing the user's name.
+message AuthoriseAccountResponse {
   string token = 1;
 }
 

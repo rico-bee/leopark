@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"errors"
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	mktpb "github.com/rico-bee/leopark/market"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
@@ -36,7 +37,7 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 		log.Println("failed to send batch request")
 	}
 
-	hashPwd, err := HashPassword("getSome6")
+	hashPwd, err := HashPassword(in.Password)
 	authInfo := &AuthInfo{
 		Email:      in.Email,
 		PwdHash:    hashPwd,
@@ -50,6 +51,19 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 	}
 	tokenString, err := GenerateAuthToken(authInfo)
 	return &pb.CreateAccountResponse{Token: tokenString}, nil
+}
+
+func (s *server) DoAuthoriseAccount(ctx context.Context, in *pb.AuthoriseAccountRequest) (*pb.AuthoriseAccountResponse, error) {
+	auth, err := s.db.FindUser(in.Email)
+	if err != nil {
+		return nil, err
+	}
+	hashPwd, err := HashPassword(in.Password)
+	if auth.PwdHash != hashPwd {
+		return &pb.AuthoriseAccountResponse{}, errors.New("invalid password")
+	}
+	tokenString, err := GenerateAuthToken(auth)
+	return &pb.AuthoriseAccountResponse{Token: tokenString}, nil
 }
 
 func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (*pb.CreateAssetResponse, error) {
