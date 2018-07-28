@@ -36,9 +36,9 @@ const LoginForm = {
             email: vnode.state.email,
             password: vnode.state.password
           }
-          api.post('authorization', credentials)
+          api.post('authorise', credentials)
             .then(res => {
-              api.setAuth(res.authorization)
+              api.setAuth(res.token)
               m.route.set('/')
             })
             .catch(api.alertError)
@@ -46,7 +46,7 @@ const LoginForm = {
       },
       m('legend', 'Login Account'),
       forms.emailInput(setter('email'), 'Email'),
-      forms.nameInput(setter('name'), 'Name'),
+      forms.passwordInput(setter('password'), 'Password'),
       m('.container.text-center',
         'Or you can ',
         m('a[href="/signup"]',

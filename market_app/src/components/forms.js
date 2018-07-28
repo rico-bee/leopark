@@ -55,6 +55,7 @@ const textInput = _.partial(input, 'text')
 const nameInput = _.partial(input, 'name')
 const numberInput = _.partial(input, 'number')
 const emailInput = _.partial(input, 'email')
+const passwordInput = _.partial(input, 'password')
 
 /**
  * Creates an icon with an onclick function
@@ -100,6 +101,7 @@ module.exports = {
   textInput,
   nameInput,
   numberInput,
+  passwordInput,
   emailInput,
   clickIcon,
   stateSetter,
