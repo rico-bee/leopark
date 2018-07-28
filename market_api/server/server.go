@@ -63,6 +63,7 @@ func (server *Server) Start() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	r.HandleFunc("/account", server.handleRegistration).Methods("POST")
+	r.HandleFunc("/authorise", server.handleAuthorisation).Methods("POST")
 	http.ListenAndServe(":8088", handlers.CORS(originsOk, headersOk, methodsOk)(r))
 	//Stop Events go here
 	server.logger.Info("We stopped successfully")

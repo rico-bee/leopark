@@ -38,18 +38,19 @@ func formatRequest(r *http.Request) string {
 	return strings.Join(request, "\n")
 }
 
+func bindRequestBody(r *http.Request, dto interface{}) {
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(dto)
+}
+
 func (server *Server) handleRegistration(w http.ResponseWriter, r *http.Request) {
 	register := &AccountRequest{}
-	log.Println(formatRequest(r))
-	decoder := json.NewDecoder(r.Body)
-
-	decoder.Decode(register)
-	log.Println("name:" + register.Name + ", email: " + register.Email)
+	bindRequestBody(r, register)
 	req := pb.CreateAccountRequest{
-		Name:  register.Name,
-		Email: register.Email,
+		Name:     register.Name,
+		Email:    register.Email,
+		Password: register.Password,
 	}
-
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
 	defer cancel()
@@ -58,8 +59,6 @@ func (server *Server) handleRegistration(w http.ResponseWriter, r *http.Request)
 		log.Println("failed to make rpc call:" + err.Error())
 		return
 	}
-	log.Println("token:" + res.Token)
-
 	account := &AccountResponse{
 		Token: res.Token,
 	}
@@ -69,8 +68,25 @@ func (server *Server) handleRegistration(w http.ResponseWriter, r *http.Request)
 	w.Write(response)
 }
 
-func (server *Server) handleAuthorisation(w http.ResponseWriter, r *http.Request) error {
-	return nil
+func (server *Server) handleAuthorisation(w http.ResponseWriter, r *http.Request) {
+	authorise := &AuthoriseRequest{}
+	bindRequestBody(r, authorise)
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
+	defer cancel()
+	authoriseReq := &pb.AuthoriseAccountRequest{Email: authorise.Email, Password: authorise.Password}
+	res, err := server.rpcClient.DoAuthoriseAccount(ctx, authoriseReq)
+	if err != nil {
+		log.Println("failed to make rpc call:" + err.Error())
+		return
+	}
+	account := &AccountResponse{
+		Token: res.Token,
+	}
+	response, _ := json.Marshal(account)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
 }
 
 func (server *Server) handleCreateAsset(w http.ResponseWriter, r *http.Request) error {
