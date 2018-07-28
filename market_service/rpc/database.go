@@ -1,16 +1,16 @@
 package rpc
 
 import (
-	"log"
-
+	"encoding/json"
 	db "gopkg.in/gorethink/gorethink.v4"
+	"log"
 )
 
 type AuthInfo struct {
-	Email      string `json:"email"`
-	PublicKey  string `json:"public_key"`
-	PwdHash    string `json:"pwd_hash,omitempty"`
-	PrivateKey string `json:"private_key,omitempty"`
+	Email      string `gorethink:"email"`
+	PublicKey  string `gorethink:"publicKey"`
+	PwdHash    string `gorethink:"pwdHash,omitempty"`
+	PrivateKey string `gorethink:"privateKey,omitempty"`
 }
 
 type DbServer struct {
@@ -35,20 +35,30 @@ func NewDBServer(url string) (*DbServer, error) {
 }
 
 func (s *DbServer) FindUser(email string) (*AuthInfo, error) {
-	res, err := db.DB("market").Table("auth").Get(email).Run(s.session)
+	cursor, err := db.DB("market").Table("auth").Run(s.session)
 	if err != nil {
 		return nil, err
 	}
-	defer res.Close()
 	var auth AuthInfo
-	err = res.One(&auth)
+	err = cursor.One(&auth)
+	if err != nil {
+		log.Println("query error:" + err.Error())
+	}
+	cursor.Close()
+	printObj(auth)
+	log.Println(auth.Email)
 	return &auth, err
+}
+
+func printObj(v interface{}) {
+	vBytes, _ := json.Marshal(v)
+	log.Println(string(vBytes))
 }
 
 func (s *DbServer) CreateUser(authInfo *AuthInfo) error {
 	return db.DB("market").Table("auth").Insert(map[string]string{
-		"id":         authInfo.Email,
-		"password":   authInfo.PwdHash,
+		"email":      authInfo.Email,
+		"pwdHash":    authInfo.PwdHash,
 		"privateKey": authInfo.PrivateKey,
 		"publicKey":  authInfo.PublicKey,
 	}).Exec(s.session)

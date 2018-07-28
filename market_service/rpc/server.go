@@ -38,6 +38,7 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 	}
 
 	hashPwd, err := HashPassword(in.Password)
+	log.Println("receive password:" + in.Password + ", hashed: " + hashPwd)
 	authInfo := &AuthInfo{
 		Email:      in.Email,
 		PwdHash:    hashPwd,
@@ -56,13 +57,18 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 func (s *server) DoAuthoriseAccount(ctx context.Context, in *pb.AuthoriseAccountRequest) (*pb.AuthoriseAccountResponse, error) {
 	auth, err := s.db.FindUser(in.Email)
 	if err != nil {
+		log.Println("cannot find user....")
 		return nil, err
 	}
 	hashPwd, err := HashPassword(in.Password)
-	if auth.PwdHash != hashPwd {
+	log.Println("receive password:" + in.Password + ", hashed: " + hashPwd)
+	log.Println("password in db:" + auth.PwdHash)
+	if !CheckPasswordHash(in.Password, auth.PwdHash) {
+		log.Println("invalid password....")
 		return &pb.AuthoriseAccountResponse{}, errors.New("invalid password")
 	}
 	tokenString, err := GenerateAuthToken(auth)
+	log.Println("token:" + tokenString)
 	return &pb.AuthoriseAccountResponse{Token: tokenString}, nil
 }
 
