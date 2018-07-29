@@ -1,0 +1,91 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "3Xl2eFF4Q+bZkX2RIrIZUkYDRdk=",
+			"path": "github.com/golang/protobuf/proto",
+			"revision": "70c277a8a150a8e069492e6600926300405c2884",
+			"revisionTime": "2018-05-18T21:57:37Z"
+		},
+		{
+			"checksumSHA1": "rL58Tgsl27JWblBoLAdcYJm1Gwg=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/logging",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "yL2vURL1C9cs0mhuNkTbj04nJ+M=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/messaging",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "OsHLa51I/NQFhu+yOgrwFgTZxps=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/processor",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "Uhw6/I6xeQEkVonarg9y8LJKYKM=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/protobuf/events_pb2",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "btzgb55WTZAmufOa6hVHk573o1o=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/protobuf/network_pb2",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "alkKy21mKbZc41z5ulytE9k5jdA=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "Tnj/iy4US6TDLmLWlnLeByp0fcY=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/protobuf/state_context_pb2",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "7SLF3GOl97iqyHazbbkcc013sW0=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/protobuf/transaction_pb2",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "6WiL3A9lxMlEKvEX6Qbk069nlO4=",
+			"path": "github.com/hyperledger/sawtooth-sdk-go/protobuf/validator_pb2",
+			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",
+			"revisionTime": "2018-06-04T01:44:47Z"
+		},
+		{
+			"checksumSHA1": "ZZoq2rL0hPTsWAi/PSo9ogss/vE=",
+			"path": "github.com/pebbe/zmq4",
+			"revision": "5b443b6471cea4b4f9f85025530c04c93233f76a",
+			"revisionTime": "2018-04-10T12:57:55Z"
+		},
+		{
+			"checksumSHA1": "Dyy5B6GmLeDOp0i5WQ3tosmT7Ew=",
+			"path": "github.com/rico-bee/leopark/address",
+			"revision": "a4ab704da3d94fc31be449f0c8e807645b87c618",
+			"revisionTime": "2018-07-29T08:55:15Z"
+		},
+		{
+			"checksumSHA1": "olskDBFejVgEO3vkYoHLQRFRcUQ=",
+			"path": "github.com/rico-bee/leopark/market",
+			"revision": "a4ab704da3d94fc31be449f0c8e807645b87c618",
+			"revisionTime": "2018-07-29T08:55:15Z"
+		},
+		{
+			"checksumSHA1": "eDQ6f1EsNf+frcRO/9XukSEchm8=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "36e9d2ebbde5e3f13ab2e25625fd453271d6522e",
+			"revisionTime": "2018-01-03T17:44:51Z"
+		}
+	],
+	"rootPath": "github.com/rico-bee/leopark/processor"
+}
