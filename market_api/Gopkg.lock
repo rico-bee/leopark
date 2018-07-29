@@ -23,6 +23,12 @@
   revision = "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/auth0/go-jwt-middleware"
+  packages = ["."]
+  revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
+
+[[projects]]
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
@@ -218,9 +224,21 @@
   revision = "168a6198bcb0ef175f7dacec0b8691fc141dc9b8"
   version = "v1.13.0"
 
+[[projects]]
+  name = "gopkg.in/alecthomas/kingpin.v2"
+  packages = ["."]
+  revision = "947dcec5ba9c011838740e680966fd7087a71d0d"
+  version = "v2.2.6"
+
+[[projects]]
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "100c37bf702265c1ffe03824b530b794ef64504c06ec60f129719e9a9339f1f0"
+  inputs-digest = "d75ead7aa4fab88983e72e3095e5cd2d84ca2dbb695d6c6c4ce01238fd64c1d8"
   solver-name = "gps-cdcl"
   solver-version = 1

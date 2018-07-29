@@ -19,16 +19,6 @@ var (
 )
 
 func main() {
-
-	showversion := kingpin.Flag("version", "Show version information.").Short('v').Bool()
-	// configPath := kingpin.Flag("config", "Optional config file path.").Default("config.user.json").String()
-	//debug := kingpin.Flag("debug", "Set logging to debug.").Bool()
-	kingpin.Parse()
-
-	if *showversion == true {
-		fmt.Printf("Version: %s\n", version)
-		os.Exit(0)
-	}
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(rpcUrl, grpc.WithInsecure())
 	if err != nil {

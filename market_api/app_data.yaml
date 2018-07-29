@@ -1,0 +1,82 @@
+# Copyright 2017 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# -----------------------------------------------------------------------------
+
+accounts:
+  - label: LeoPark community
+    description: The sole issuing authoririty for LEO coin
+    email: admin@leotech.com.au
+    password: password
+    assets:
+      - name: LEOCoin
+        description: The cryptocurrency that fits in your pocket
+        rules:
+          - type: OWNER_HOLDINGS_INFINITE
+    holdings:
+      - label: LEOCoin Source
+        description: An unlimited supply new LEOCoin
+        asset: LEOCoin
+        quantity: 9007199254740991
+    offers:
+      - label: Minicoin Provision
+        description: A one time payout of 1 million minicoin
+        source: $REF=HOLDINGS[label:LEOCoin Source].id
+        sourceQuantity: 1000000
+        rules:
+          - type: EXCHANGE_ONCE_PER_ACCOUNT
+    renewables: []
+
+  - label: LEOTech Pty Ltd
+    description: The source for all your LeoPark products and services
+    email: admin@leopark.io
+    password: password
+    assets:
+      - name: LOD
+        description: LEO Dollars represent loyalty points, better than cryptocurrency!
+        rules:
+          - type: OWNER_HOLDINGS_INFINITE
+      - name: LVP
+        description: |
+          Your voting power on LeoPark,you have a bright future 
+        rules:
+          - type: ALL_HOLDINGS_INFINITE
+          - type: NOT_TRANSFERABLE
+      - name: Coupon for a Campos latte
+        description: |
+          Redeem for a best coffee in town at Campos flagship store
+        rules: []
+      - name: Coupon for a free task
+        description: |
+          Now you can publish a task on LeoPark for free!
+          (Terms and service fees may apply)
+        rules: []
+    holdings:
+      - label: LOD
+        description: An unlimited supply of precious precious LOD
+        asset: LOD
+        quantity: 9007199254740991
+      - label: LVP
+        description: An unlimited supply of LVP
+        asset: LVP
+        quantity: 9007199254740991
+      - label: Coupon for a Campos latte
+        description: Coupons for a limited run of 1000 campos coffee
+        asset: Coupon for one campos coffee
+        quantity: 1000
+      - label: Coupon for a free task
+        description: Coupons to be redeemed for free task on LeoPark
+        asset: Coupon for a free task
+        quantity: 10000
+    renewables: []
+      

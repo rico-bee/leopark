@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/auth0/go-jwt-middleware"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
@@ -57,6 +59,15 @@ func NewServer(rpc pb.MarketClient) (*Server, error) {
 func (server *Server) Start() {
 	logrus.Println("starting server...")
 	r := mux.NewRouter()
+	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
+		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			return []byte("My Secret"), nil
+		},
+		// When set, the middleware verifies that tokens are signed with the specific signing algorithm
+		// If the signing method is not constant the ValidationKeyGetter callback can be used to implement additional checks
+		// Important to avoid security issues described here: https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/
+		SigningMethod: jwt.SigningMethodHS256,
+	})
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
@@ -64,7 +75,9 @@ func (server *Server) Start() {
 
 	r.HandleFunc("/account", server.handleRegistration).Methods("POST")
 	r.HandleFunc("/authorise", server.handleAuthorisation).Methods("POST")
-	http.ListenAndServe(":8088", handlers.CORS(originsOk, headersOk, methodsOk)(r))
+	r.HandleFunc("/asset", server.handleCreateAsset).Methods("POST")
+	corsHandler := handlers.CORS(originsOk, headersOk, methodsOk)(r)
+	http.ListenAndServe(":8088", jwtMiddleware.Handler(corsHandler))
 	//Stop Events go here
 	server.logger.Info("We stopped successfully")
 }
