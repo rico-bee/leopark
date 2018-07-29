@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"encoding/json"
+	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	db "gopkg.in/gorethink/gorethink.v4"
 	"log"
 )
@@ -30,6 +31,26 @@ func NewDBServer(url string) (*DbServer, error) {
 
 	server := &DbServer{
 		session: session,
+	}
+	_, err = db.DBCreate("market").Run(server.session)
+	if err != nil {
+		log.Println("failed to create market db" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("auth").Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.auth" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("asset").Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.asset" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("holding").Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.holding" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("offer").Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.offer" + err.Error())
 	}
 	return server, nil
 }
@@ -75,4 +96,21 @@ func (s *DbServer) ListUsers(authInfo *AuthInfo) ([]AuthInfo, error) {
 		return nil, err
 	}
 	return authInfoList, nil
+}
+
+func (s *DbServer) CreateAsset(name, description string, rules []*pb.AssetRule) error {
+	return db.DB("market").Table("asset").Insert(map[string]interface{}{
+		"name":        name,
+		"description": description,
+		"rules":       rules,
+	}).Exec(s.session)
+}
+
+func (s *DbServer) CreateHolding(id, label, asset, description string, quantity int64) error {
+	return db.DB("market").Table("holding").Insert(map[string]interface{}{
+		"label":       label,
+		"description": description,
+		"asset":       asset,
+		"quantity":    quantity,
+	}).Exec(s.session)
 }

@@ -51,6 +51,7 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 		return nil, err
 	}
 	tokenString, err := GenerateAuthToken(authInfo)
+	log.Println("token string:" + tokenString)
 	return &pb.CreateAccountResponse{Token: tokenString}, nil
 }
 
@@ -60,9 +61,6 @@ func (s *server) DoAuthoriseAccount(ctx context.Context, in *pb.AuthoriseAccount
 		log.Println("cannot find user....")
 		return nil, err
 	}
-	hashPwd, err := HashPassword(in.Password)
-	log.Println("receive password:" + in.Password + ", hashed: " + hashPwd)
-	log.Println("password in db:" + auth.PwdHash)
 	if !CheckPasswordHash(in.Password, auth.PwdHash) {
 		log.Println("invalid password....")
 		return &pb.AuthoriseAccountResponse{}, errors.New("invalid password")
@@ -75,10 +73,12 @@ func (s *server) DoAuthoriseAccount(ctx context.Context, in *pb.AuthoriseAccount
 func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (*pb.CreateAssetResponse, error) {
 	auth, err := ParseAuthToken(in.Token)
 	if err != nil {
+		log.Println("parse auth:" + err.Error())
 		return nil, err
 	}
 	auth, err = s.db.FindUser(auth.Email)
 	if err != nil {
+		log.Println("parse auth:" + err.Error())
 		return nil, err
 	}
 	privateKey := signing.NewSecp256k1PrivateKey([]byte(auth.PrivateKey))
@@ -94,13 +94,18 @@ func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (
 
 	batches, signature := transaction.CreateAsset(signer, s.signer, in.Name, in.Description, rules)
 	if signature == "" {
-		log.Fatal("Failed to create account")
+		log.Fatal("Failed to create asset")
 	}
 	err = s.validator.BatchRequest(batches)
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
 
+	err = s.db.CreateAsset(in.Name, in.Description, in.Rules)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, errors.New("failed to create asset in db")
+	}
 	return &pb.CreateAssetResponse{Message: "success"}, nil
 }
 
@@ -115,7 +120,9 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 	}
 	privateKey := signing.NewSecp256k1PrivateKey([]byte(auth.PrivateKey))
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
-	batches, signature := transaction.CreateHolding(signer, s.signer, req.Identifier, req.Label, req.Descrption, req.Asset, req.Quantity)
+	batches, signature := transaction.CreateHolding(signer, s.signer,
+		req.Identifier,
+		req.Label, req.Descrption, req.Asset, req.Quantity)
 	if signature == "" {
 		log.Fatal("Failed to create account")
 	}
@@ -123,7 +130,11 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
-
+	err = s.db.CreateHolding(req.Identifier, req.Label, req.Asset, req.Descrption, req.Quantity)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, errors.New("failed to create holding in db")
+	}
 	return &pb.CreateHoldingResponse{Message: "sucess"}, nil
 }
 

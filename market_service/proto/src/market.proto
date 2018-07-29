@@ -77,10 +77,9 @@ message CreateHoldingRequest {
   string identifier = 1;
   string label = 2;
   string descrption = 3;
-  string account = 4;
-  string asset = 5;
-  int64 quantity = 6;
-  string token = 7;
+  string asset = 4;
+  int64 quantity = 5;
+  string token = 6;
 }
 
 // The response message containing the greetings

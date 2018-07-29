@@ -22,5 +22,6 @@ func handleAssetCreation(createAsset *pb.CreateAsset, header *pb2.TransactionHea
 		msg := fmt.Sprintf("Asset with name %s already exists", createAsset.Name)
 		return []string{}, errors.New(msg)
 	}
+	log.Println("creating asset:" + createAsset.Name + ": " + createAsset.Description)
 	return state.SetAsset(createAsset.Name, createAsset.Description, []string{header.SignerPublicKey}, createAsset.Rules)
 }
