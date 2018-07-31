@@ -116,7 +116,7 @@ func HexDigest(text string) string {
 	return hex.EncodeToString(d[:])
 }
 
-func addressOf(address string) Space {
+func AddressOf(address string) Space {
 	if address[:len(FamilyName)] != FamilyName {
 		return AssetSpaceOtherFamily
 	}

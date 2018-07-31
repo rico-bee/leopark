@@ -66,7 +66,6 @@ func (s *DbServer) FindUser(email string) (*AuthInfo, error) {
 		log.Println("query error:" + err.Error())
 	}
 	cursor.Close()
-	printObj(auth)
 	log.Println(auth.Email)
 	return &auth, err
 }
@@ -113,4 +112,8 @@ func (s *DbServer) CreateHolding(id, label, asset, description string, quantity 
 		"asset":       asset,
 		"quantity":    quantity,
 	}).Exec(s.session)
+}
+
+func (s *DbServer) ListAssets() {
+
 }

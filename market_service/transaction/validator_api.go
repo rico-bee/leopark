@@ -62,12 +62,6 @@ func (s *SawtoothAPI) BatchRequest(batches []*batch_pb2.Batch) error {
 	return err
 }
 
-// func (s *SawtoothAPI) CheckBatchRequest(batchId string) error {
-// 	req := &client_batch_submit_pb2.ClientBatchStatusRequest{
-// 		BatchIds: []string{batchId},
-// 	}
-// }
-
 func NewSawtoothApi(validatorUrl string) *SawtoothAPI {
 	zmqCtx, err := zmq.NewContext()
 	if err != nil {
@@ -82,44 +76,3 @@ func NewSawtoothApi(validatorUrl string) *SawtoothAPI {
 		connection: conn,
 	}
 }
-
-// func (s *SawtoothAPI) request(path, method string, payload interface{}) (Payload, error) {
-// 	url := s.validatorURL + "/" + path
-// 	buf := new(bytes.Buffer)
-// 	var contentType string
-// 	switch v := payload.(type) {
-// 	case string:
-// 		buf = bytes.NewBufferString(v)
-// 		contentType = MIMEApplicationForm
-// 	default:
-// 		err := json.NewEncoder(buf).Encode(payload)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		contentType = MIMEApplicationJSON
-// 	}
-// 	req, _ := http.NewRequest(method, url, buf)
-// 	req.Header.Add(headerAccept, MIMEApplicationJSON)
-// 	req.Header.Add(headerContentType, contentType)
-// 	req.Header.Add(headerUserAgent, userAgent)
-
-// 	resp, err := s.httpClient.Do(req)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer resp.Body.Close()
-// 	respContentType := resp.Header.Get(headerContentType)
-// 	if resp.StatusCode >= http.StatusInternalServerError && resp.StatusCode != 503 && respContentType == MIMEApplicationJSON {
-// 		log.Fatalf("failed to CALL validator")
-// 		return nil, errors.New("failed to call the validator")
-// 	}
-// 	// only 200 || 201 || 202 is expected from this call
-// 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusAccepted {
-// 		return nil, errors.New("failed to call the validator")
-// 	}
-// 	bodyBytes, err := ioutil.ReadAll(resp.Body)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return bodyBytes, nil
-// }
