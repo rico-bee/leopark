@@ -25,7 +25,7 @@ func makeHeader(inputAddresses []string, outputAddresses []string, payloadSha512
 	if err != nil {
 		log.Println("whatever it is wrong..")
 	}
-
+	log.Println("signer key:" + signerPublicKey)
 	header := &transaction_pb2.TransactionHeader{
 		Inputs:           inputAddresses,
 		Outputs:          outputAddresses,
@@ -104,8 +104,11 @@ func CreateAccount(txnKey *Signer, batchKey *Signer, label, description string) 
 }
 
 func CreateAsset(txnKey, batchKey *Signer, name, description string, rules []*pb.Rule) ([]*batch_pb2.Batch, string) {
-	inputs := []string{addresser.MakeAssetAddress(txnKey.GetPublicKey().AsHex())}
-	outputs := []string{addresser.MakeAssetAddress(txnKey.GetPublicKey().AsHex())}
+
+	accountAdd := addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex())
+	assetAdd := addresser.MakeAssetAddress(name)
+	inputs := []string{accountAdd, assetAdd}
+	outputs := []string{assetAdd}
 
 	createAsset := &pb.CreateAsset{
 		Name:        name,
@@ -121,12 +124,16 @@ func CreateAsset(txnKey, batchKey *Signer, name, description string, rules []*pb
 	if err != nil {
 		log.Fatal("failed to marshal payload")
 	}
+	log.Println("creating asset:" + name + txnKey.GetPublicKey().AsHex())
 	return makeHeaderAndBatch(data, inputs, outputs, txnKey, batchKey)
 }
 
 func CreateHolding(txnKey, batchKey *Signer, identifier, label, description, asset string, quantity int64) ([]*batch_pb2.Batch, string) {
-	inputs := []string{addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex()), addresser.MakeAssetAddress(asset), addresser.MakeHoldingAddress(identifier)}
-	outputs := []string{addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex()), addresser.MakeHoldingAddress(txnKey.GetPublicKey().AsHex())}
+	accountAdd := addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex())
+	assetAdd := addresser.MakeAssetAddress(asset)
+	holdingAdd := addresser.MakeHoldingAddress(identifier)
+	inputs := []string{accountAdd, assetAdd, holdingAdd}
+	outputs := []string{accountAdd, holdingAdd}
 
 	createHolding := &pb.CreateHolding{
 		Id:          identifier,
@@ -143,6 +150,7 @@ func CreateHolding(txnKey, batchKey *Signer, identifier, label, description, ass
 	if err != nil {
 		log.Fatal("failed to marshal payload")
 	}
+	log.Println("creating holding:" + identifier + " for asset " + asset + txnKey.GetPublicKey().AsHex())
 	return makeHeaderAndBatch(data, inputs, outputs, txnKey, batchKey)
 }
 
@@ -154,10 +162,18 @@ type MarketplaceHolding struct {
 
 func CreateOffer(txnKey, batchKey *Signer, identifier, label, description string, source,
 	target *MarketplaceHolding, rules []*pb.Rule) ([]*batch_pb2.Batch, string) {
-	inputs := []string{addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex()),
-		addresser.MakeAssetAddress(source.Asset), addresser.MakeOfferAddress(identifier)}
-	outputs := []string{addresser.MakeOfferAddress(identifier),
-		addresser.MakeHoldingAddress(txnKey.GetPublicKey().AsHex())}
+	accountAdd := addresser.MakeAccountAddress(txnKey.GetPublicKey().AsHex())
+	srcAssetAdd := addresser.MakeAssetAddress(source.Asset)
+	offerAdd := addresser.MakeOfferAddress(identifier)
+	srcHoldingAdd := addresser.MakeHoldingAddress(source.HoldingId)
+	targetHoldingAdd := addresser.MakeHoldingAddress(target.HoldingId)
+	targetAssetAdd := addresser.MakeAssetAddress(source.Asset)
+	inputs := []string{accountAdd, srcAssetAdd, offerAdd, srcHoldingAdd}
+	if target != nil {
+		inputs = append(inputs, targetHoldingAdd)
+		inputs = append(inputs, targetAssetAdd)
+	}
+	outputs := []string{offerAdd}
 	if target.HoldingId != "" {
 		inputs = append(inputs, addresser.MakeHoldingAddress(target.HoldingId))
 		inputs = append(inputs, addresser.MakeAssetAddress(target.Asset))

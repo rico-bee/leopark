@@ -22,12 +22,12 @@ ENV PATH $PATH:/project/sawtooth-marketplace/bin
 
 RUN echo "\
 \n\
-ServerName sawbuck_app\n\
+ServerName leopark_app\n\
 AddDefaultCharset utf-8\n\
 LoadModule proxy_module modules/mod_proxy.so\n\
 LoadModule proxy_http_module modules/mod_proxy_http.so\n\
-ProxyPass /api http://market-rest-api:8000\n\
-ProxyPassReverse /api http://market-rest-api:8000\n\
+ProxyPass /api http://market-api:8000\n\
+ProxyPassReverse /api http://market-api:8000\n\
 \n\
 " >>/usr/local/apache2/conf/httpd.conf
 

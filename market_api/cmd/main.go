@@ -105,17 +105,19 @@ func main() {
 	c := pb.NewMarketClient(conn)
 
 	for _, p := range mktData.Participants {
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
 		req := &pb.CreateAccountRequest{
 			Name:     p.Label,
 			Email:    p.Email,
 			Password: p.Password,
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 		res, err := c.DoCreateAccount(ctx, req)
-		defer cancel()
 		if err != nil {
-			log.Println("rpc failed:" + err.Error())
+			log.Fatal("rpc failed:" + err.Error())
 		}
+
 		for _, a := range p.Assets {
 			aReq := &pb.CreateAssetRequest{
 				Name:        a.Name,
@@ -125,14 +127,14 @@ func main() {
 			}
 			_, err := c.DoCreateAsset(ctx, aReq)
 			if err != nil {
-				log.Println("rpc failed:" + err.Error())
+				log.Fatal("rpc failed:" + err.Error())
 			}
 		}
 
 		for _, h := range p.Holdings {
 			id, err := uuid.GenerateUUID()
 			if err != nil {
-				log.Println("failed toget uuid:" + err.Error())
+				log.Fatal("failed toget uuid:" + err.Error())
 			}
 			hReq := &pb.CreateHoldingRequest{
 				Identifier: id,
@@ -148,7 +150,4 @@ func main() {
 			}
 		}
 	}
-	// res2B, _ := json.Marshal(mktData)
-	// log.Println(string(res2B))
-
 }

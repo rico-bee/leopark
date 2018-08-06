@@ -1,8 +1,9 @@
 package main
 
 type Block struct {
-	BlockNum int64  `gorethink:"block_num"`
-	BlockId  string `gorethink:"block_id"`
+	BlockNum int64  `gorethink:"block_num" json:"block_num"`
+	BlockId  string `gorethink:"block_id" json:"block_id"`
+	Id       string `gorethink:"id" json:"id,omitempty"`
 }
 
 type BlockRange struct {
@@ -13,7 +14,7 @@ type BlockRange struct {
 type Account struct {
 	BlockRange
 	Holdings  []string `gorethink:"holdings"`
-	PublicKey string   `gorethink:"publicKey"`
+	PublicKey string   `gorethink:"public_key"`
 	Email     string   `gorethink:"email"`
 }
 

@@ -72,38 +72,43 @@ func compress(address string, start Range, stop Range) string {
 	if err != nil {
 		log.Fatal("Invliad address" + err.Error())
 	}
-	return fmt.Sprintf("%.2X", addressHex%int64(stop-start)+int64(start))
+	return fmt.Sprintf("%.2x", addressHex%int64(stop-start)+int64(start))
 }
 
 func MakeOfferAccountAddress(offerId, account string) string {
 	offerHash := hash512(offerId)
 	accountHash := hash512(account)
-	return FamilyName + "00" + offerHash[:60] + compress(accountHash, 1, 256)
+	return NS + "00" + offerHash[:60] + compress(accountHash, 1, 256)
 }
 
 func MakeOfferHistoryAddress(offerId string) string {
 	offerHash := hash512(offerId)
-	return FamilyName + "00" + offerHash[:60] + "00"
+	return NS + "00" + offerHash[:60] + "00"
 }
 
 func MakeAssetAddress(assetId string) string {
 	assetHash := hash512(assetId)
-	return FamilyName + compress(assetHash, AssetStart, AccountEnd) + assetHash[:62]
+	return NS + compress(assetHash, AssetStart, AssetEnd) + assetHash[:62]
 }
 
 func MakeHoldingAddress(holdingId string) string {
 	holdingHash := hash512(holdingId)
-	return FamilyName + compress(holdingHash, HoldingStart, HoldingEnd) + holdingHash[:62]
+	return NS + compress(holdingHash, HoldingStart, HoldingEnd) + holdingHash[:62]
 }
 
 func MakeAccountAddress(accountId string) string {
 	hash := hash512(accountId)
-	return NS + compress(hash, AccountStart, AccountEnd) + hash[:62]
+	compressedKey := compress(hash, AccountStart, AccountEnd)
+	log.Println("ns prefix:" + NS)
+	log.Println("compressedKey:" + compressedKey)
+	hashLen := len(hash[:62])
+	log.Println("length of key:" + strconv.Itoa(hashLen))
+	return NS + compressedKey + hash[:62]
 }
 
 func MakeOfferAddress(offerId string) string {
 	offerHash := hash512(offerId)
-	return FamilyName + compress(offerHash, AccountStart, AccountEnd) + offerHash[:62]
+	return NS + compress(offerHash, OfferStart, OfferEnd) + offerHash[:62]
 }
 
 func contains(num, start, end Range) bool {
@@ -117,7 +122,7 @@ func HexDigest(text string) string {
 }
 
 func AddressOf(address string) Space {
-	if address[:len(FamilyName)] != FamilyName {
+	if address[:len(NS)] != NS {
 		return AssetSpaceOtherFamily
 	}
 	infix, err := strconv.ParseInt(address[6:8], 16, 64)

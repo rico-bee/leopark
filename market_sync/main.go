@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
 )
 
 func main() {
@@ -13,6 +15,17 @@ func main() {
 	if err != nil {
 		log.Println("failed to find last known blocks")
 	}
-	subscriber := NewSubscriber("tcp://localhost:4040", db)
+
+	done := make(chan interface{})
+	subscriber := NewSubscriber("tcp://localhost:4040", done, db)
 	subscriber.Start(knownBlocks)
+
+	c := make(chan os.Signal, 1)
+	// Passing no signals to Notify means that
+	// all signals will be sent to the channel.
+	signal.Notify(c)
+
+	s := <-c
+	close(done)
+	log.Println("gracefully exit:" + s.String())
 }

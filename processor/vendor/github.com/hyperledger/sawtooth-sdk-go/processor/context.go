@@ -133,6 +133,7 @@ func (self *Context) GetState(addresses []string) (map[string][]byte, error) {
 //
 func (self *Context) SetState(pairs map[string][]byte) ([]string, error) {
 	// Construct the message
+	fmt.Println("set state context id:" + self.contextId)
 	entries := make([]*state_context_pb2.TpStateEntry, 0, len(pairs))
 	for address, data := range pairs {
 		entries = append(entries, &state_context_pb2.TpStateEntry{

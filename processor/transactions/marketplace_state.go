@@ -34,6 +34,9 @@ func (s *MarketState) GetAccountContainer(address string) (*pb.AccountContainer,
 }
 
 func (s *MarketState) FindAccountFromContainer(identifier string, container *pb.AccountContainer) (*pb.Account, error) {
+	if container == nil || container.Entries == nil {
+		return nil, errors.New("account container is nil:" + identifier)
+	}
 	for _, account := range container.Entries {
 		if account.PublicKey == identifier {
 			return account, nil
@@ -52,6 +55,9 @@ func (s *MarketState) GetAssetContainer(address string) (*pb.AssetContainer, err
 }
 
 func (s *MarketState) FindAssetFromContainer(name string, container *pb.AssetContainer) (*pb.Asset, error) {
+	if container == nil || container.Entries == nil {
+		return nil, errors.New("Cannot find asset")
+	}
 	for _, asset := range container.Entries {
 		if asset.Name == name {
 			return asset, nil
@@ -70,6 +76,9 @@ func (s *MarketState) GetHoldingContainer(address string) (*pb.HoldingContainer,
 }
 
 func (s *MarketState) FindHoldingFromContainer(id string, container *pb.HoldingContainer) (*pb.Holding, error) {
+	if container == nil || container.Entries == nil {
+		return nil, errors.New("Cannot find holding")
+	}
 	for _, holding := range container.Entries {
 		if holding.Id == id {
 			return holding, nil
@@ -88,6 +97,9 @@ func (s *MarketState) GetOfferContainer(address string) (*pb.OfferContainer, err
 }
 
 func (s *MarketState) FindOfferFromContainer(id string, container *pb.OfferContainer) (*pb.Offer, error) {
+	if container == nil || container.Entries == nil {
+		return nil, errors.New("Cannot find offer")
+	}
 	for _, offer := range container.Entries {
 		if offer.Id == id {
 			return offer, nil
@@ -106,6 +118,9 @@ func (s *MarketState) GetHistoryContainer(address string) (*pb.OfferHistoryConta
 }
 
 func (s *MarketState) FindHistoryByOfferId(offerId string, container *pb.OfferHistoryContainer) (*pb.OfferHistory, error) {
+	if container == nil || container.Entries == nil {
+		return nil, errors.New("Cannot find offer")
+	}
 	for _, history := range container.Entries {
 		if history.OfferId == offerId {
 			return history, nil
@@ -127,18 +142,20 @@ func (s *MarketState) FindOfferAccountReceipt(offerId, account string) (*pb.Offe
 	address := addresser.MakeOfferAccountAddress(offerId, account)
 	state, err := s.Context.GetState([]string{address})
 	if err != nil {
-		log.Fatal("Failed to get state")
+		log.Println("Failed to get state")
 	}
 	for address, data := range state {
 		s.State[address] = data
 	}
 	historyContainer, err := s.GetHistoryContainer(address)
 	if err != nil {
-		log.Fatal("Failed to get offer history container")
+		log.Println("Failed to get offer history container")
+		return nil, errors.New("Failed to find offer history container: " + address)
 	}
 	offerHistory, err := s.FindHistory(offerId, account, historyContainer)
 	if err != nil {
-		log.Fatal("Failed to find offer history")
+		log.Println("Failed to find offer history")
+		return nil, errors.New("Failed to find offer history: " + address)
 	}
 	return offerHistory, nil
 }
@@ -147,14 +164,16 @@ func (s *MarketState) OfferHasReceipt(offerId string) bool {
 	address := addresser.MakeOfferHistoryAddress(offerId)
 	state, err := s.Context.GetState([]string{address})
 	if err != nil {
-		log.Fatal("Failed to get state")
+		log.Println("Failed to get state")
+		return false
 	}
 	for address, data := range state {
 		s.State[address] = data
 	}
 	historyContainer, err := s.GetHistoryContainer(address)
 	if err != nil {
-		log.Fatal("Failed to find history container")
+		log.Println("Failed to find history container")
+		return false
 	}
 	_, err = s.FindHistoryByOfferId(offerId, historyContainer)
 	if err != nil {
@@ -166,16 +185,22 @@ func (s *MarketState) OfferHasReceipt(offerId string) bool {
 func (s *MarketState) SaveOfferReceipt(offerId string) ([]string, error) {
 	address := addresser.MakeOfferHistoryAddress(offerId)
 
-	container, err := s.GetHistoryContainer(address)
-
 	offerHistory := &pb.OfferHistory{
 		OfferId: offerId,
+	}
+	container, err := s.GetHistoryContainer(address)
+	if container == nil {
+		container = &pb.OfferHistoryContainer{}
+	}
+	if container.GetEntries() == nil {
+		container.Entries = []*pb.OfferHistory{}
 	}
 	container.Entries = append(container.GetEntries(), offerHistory)
 	newState := make(map[string][]byte)
 	newState[address], err = proto.Marshal(container)
 	if err != nil {
-		log.Fatal("Failed to serialize container")
+		log.Println("Failed to serialize container")
+		return nil, err
 	}
 	return s.Context.SetState(newState)
 }
@@ -183,16 +208,23 @@ func (s *MarketState) SaveOfferReceipt(offerId string) ([]string, error) {
 func (s *MarketState) SaveOfferAccountReceipt(offerId, accountId string) ([]string, error) {
 	address := addresser.MakeOfferAccountAddress(offerId, accountId)
 	container, err := s.GetHistoryContainer(address)
+
+	if container == nil {
+		container = &pb.OfferHistoryContainer{}
+	}
+	if container.GetEntries() == nil {
+		container.Entries = []*pb.OfferHistory{}
+	}
 	offerHistory := &pb.OfferHistory{
 		OfferId:   offerId,
 		AccountId: accountId,
 	}
 	container.Entries = append(container.GetEntries(), offerHistory)
-
 	newState := make(map[string][]byte)
 	newState[address], err = proto.Marshal(container)
 	if err != nil {
-
+		log.Println("Failed to serialize container")
+		return nil, err
 	}
 	return s.Context.SetState(newState)
 }
@@ -200,6 +232,10 @@ func (s *MarketState) SaveOfferAccountReceipt(offerId, accountId string) ([]stri
 func (s *MarketState) AddHoldingToAccount(accountId, holdingId string) ([]string, error) {
 	address := addresser.MakeAccountAddress(accountId)
 	container, err := s.GetAccountContainer(address)
+	if container == nil {
+		log.Println("cannot find account container:" + err.Error())
+		return nil, err
+	}
 
 	account, err := s.FindAccountFromContainer(accountId, container)
 	if account == nil {
@@ -208,6 +244,9 @@ func (s *MarketState) AddHoldingToAccount(accountId, holdingId string) ([]string
 			Label:       "",
 			Description: "",
 			Holdings:    []string{},
+		}
+		if container.GetEntries() == nil {
+			container.Entries = []*pb.Account{}
 		}
 		container.Entries = append(container.GetEntries(), account)
 	}
@@ -223,23 +262,24 @@ func (s *MarketState) AddHoldingToAccount(accountId, holdingId string) ([]string
 }
 
 func (s *MarketState) SetAccount(accountKey, label, description string, holdings []string) ([]string, error) {
+
+	log.Println("processor: create account: for " + label + " with key " + accountKey)
 	address := addresser.MakeAccountAddress(accountKey)
 	container, err := s.GetAccountContainer(address)
 	account, err := s.FindAccountFromContainer(accountKey, container)
 	if account == nil {
 		account = &pb.Account{
 			PublicKey:   accountKey,
-			Label:       "",
-			Description: "",
-			Holdings:    []string{},
+			Label:       label,
+			Description: description,
+			Holdings:    holdings,
 		}
-		container.Entries = append(container.GetEntries(), account)
+		container.Entries = append(container.Entries, account)
 	}
-	account.Holdings = append(account.Holdings, holdings...)
 	newState := make(map[string][]byte)
 	bytes, err := proto.Marshal(container)
 	if err != nil {
-		log.Fatal("corrupted container data")
+		log.Println("corrupted container data")
 	}
 	newState[address] = bytes
 	return s.Context.SetState(newState)
@@ -248,12 +288,15 @@ func (s *MarketState) SetAccount(accountKey, label, description string, holdings
 func (s *MarketState) GetAccount(accountKey string) (*pb.Account, error) {
 	address := addresser.MakeAccountAddress(accountKey)
 	state, err := s.Context.GetState([]string{address})
+	if err != nil {
+		log.Println("failed to find state for:" + address + ": " + err.Error())
+	}
 	for addr, data := range state {
 		s.State[addr] = data
 	}
 	container, err := s.GetAccountContainer(address)
 	if err != nil {
-		log.Println("cannot find account container, empty container returned")
+		log.Println("cannot find account container, empty container returned: " + err.Error())
 	}
 	return s.FindAccountFromContainer(accountKey, container)
 }
@@ -261,21 +304,28 @@ func (s *MarketState) GetAccount(accountKey string) (*pb.Account, error) {
 func (s *MarketState) SetAsset(name string, description string, owners []string, rules []*pb.Rule) ([]string, error) {
 	address := addresser.MakeAssetAddress(name)
 	container, err := s.GetAssetContainer(address)
-	if err != nil {
+	if container == nil {
 		log.Println("cannot get asset container")
+		if err != nil {
+			log.Println("error: " + err.Error())
+		}
+		container = &pb.AssetContainer{}
 	}
+
 	asset := &pb.Asset{
 		Name:        name,
 		Description: description,
 		Owners:      owners,
 		Rules:       rules,
 	}
-
-	container.Entries = append(container.GetEntries(), asset)
-
+	if container.GetEntries() == nil {
+		container.Entries = []*pb.Asset{}
+	}
+	container.Entries = append(container.Entries, asset)
 	newState := make(map[string][]byte)
 	bytes, err := proto.Marshal(container)
 	newState[address] = bytes
+	log.Println("processor: create asset: " + name + " - " + owners[0])
 	return s.Context.SetState(newState)
 }
 
@@ -283,7 +333,8 @@ func (s *MarketState) GetAsset(name string) *pb.Asset {
 	address := addresser.MakeAssetAddress(name)
 	container, err := s.GetAssetContainer(address)
 	if err != nil {
-		log.Println("cannot get container ")
+		log.Println("cannot get container for : " + name + "due to:" + err.Error())
+		return nil
 	}
 	asset, err := s.FindAssetFromContainer(name, container)
 	if err != nil {
@@ -297,16 +348,21 @@ func (s *MarketState) UpdateHolding(holdingId string, quantity int64) ([]string,
 	address := addresser.MakeHoldingAddress(holdingId)
 	container, err := s.GetHoldingContainer(address)
 	if err != nil {
-		log.Println("cannot find container")
+		log.Println("cannot find holding container for :" + holdingId)
+		return nil, err
 	}
 	holding, err := s.FindHoldingFromContainer(holdingId, container)
 	if err != nil {
 		log.Println("cannot find the holding")
+		return nil, err
 	}
 	holding.Quantity = quantity
-
 	state := make(map[string][]byte)
 	state[address], err = proto.Marshal(container)
+	if err != nil {
+		log.Println("cannot serialize state container:" + err.Error())
+		return nil, err
+	}
 	return s.Context.SetState(state)
 }
 
@@ -316,6 +372,12 @@ func (s *MarketState) CreateHolding(identifier string, label string,
 	container, err := s.GetHoldingContainer(address)
 	if err != nil {
 		log.Println("cannot get holding container")
+	}
+	if container == nil {
+		container = &pb.HoldingContainer{}
+	}
+	if container.GetEntries() == nil {
+		container.Entries = []*pb.Holding{}
 	}
 	holding := &pb.Holding{
 		Id:          identifier,
@@ -328,6 +390,10 @@ func (s *MarketState) CreateHolding(identifier string, label string,
 	container.Entries = append(container.GetEntries(), holding)
 	state := make(map[string][]byte)
 	state[address], err = proto.Marshal(container)
+	if err != nil {
+		log.Println("cannot serialize state container:" + err.Error())
+		return nil, err
+	}
 	return s.Context.SetState(state)
 }
 
@@ -335,7 +401,8 @@ func (s *MarketState) GetHolding(identifier string) (*pb.Holding, error) {
 	address := addresser.MakeHoldingAddress(identifier)
 	container, err := s.GetHoldingContainer(address)
 	if err != nil {
-		log.Fatal("failed to find container")
+		log.Println("failed to find container")
+		return nil, err
 	}
 	return s.FindHoldingFromContainer(identifier, container)
 }
@@ -344,15 +411,21 @@ func (s *MarketState) CloseOffer(offerId string) ([]string, error) {
 	address := addresser.MakeOfferAddress(offerId)
 	container, err := s.GetOfferContainer(address)
 	if err != nil {
-		log.Fatal("Failed to get container")
+		log.Println("Failed to get container")
+		return nil, err
 	}
 	offer, err := s.FindOfferFromContainer(offerId, container)
 	if err != nil {
-		log.Fatal("cannot find the offer")
+		log.Println("cannot find the offer")
+		return nil, err
 	}
 	offer.Status = pb.Offer_CLOSED
 	state := make(map[string][]byte)
 	state[address], err = proto.Marshal(container)
+	if err != nil {
+		log.Println("cannot serialize state container:" + err.Error())
+		return nil, err
+	}
 	return s.Context.SetState(state)
 }
 
@@ -361,8 +434,12 @@ func (s *MarketState) FindOfferRules(holdingId string) []*pb.Rule {
 	holding, err := s.GetHolding(holdingId)
 	if err != nil {
 		log.Println("cannot get holding")
+		return nil
 	}
 	asset := s.GetAsset(holding.Asset)
+	if asset == nil {
+		return nil
+	}
 	rules := make([]*pb.Rule, len(asset.Rules), (cap(asset.Rules)+1)*2)
 	for idx, r := range asset.Rules {
 		rules[idx] = r
@@ -379,6 +456,7 @@ func (s *MarketState) SetOffer(identifier, label, description,
 	container, err := s.GetOfferContainer(addr)
 	if err != nil {
 		log.Println("cannot get offer container")
+		return nil, err
 	}
 	offer := &pb.Offer{
 		Id:             identifier,
@@ -393,12 +471,26 @@ func (s *MarketState) SetOffer(identifier, label, description,
 		Status:         pb.Offer_OPEN,
 	}
 
-	offer.Rules = append(offer.Rules, s.FindOfferRules(source)...)
+	srcRule := s.FindOfferRules(source)
+	if srcRule == nil {
+		log.Println("failed to find offer rule")
+	} else {
+		offer.Rules = append(offer.Rules, srcRule...)
+	}
 	if target != "" {
-		offer.Rules = append(offer.Rules, s.FindOfferRules(target)...)
+		targetRule := s.FindOfferRules(target)
+		if targetRule == nil {
+			log.Println("failed to find offer rule")
+		} else {
+			offer.Rules = append(offer.Rules, targetRule...)
+		}
 	}
 	state := make(map[string][]byte)
 	state[addr], err = proto.Marshal(container)
+	if err != nil {
+		log.Println("cannot serialize state container:" + err.Error())
+		return nil, err
+	}
 	return s.Context.SetState(state)
 }
 
@@ -406,8 +498,8 @@ func (s *MarketState) GetOffer(identifier string) (*pb.Offer, error) {
 	addr := addresser.MakeOfferAddress(identifier)
 	container, err := s.GetOfferContainer(addr)
 	if err != nil {
-		log.Fatal("cannot find offer container")
+		log.Println("cannot find offer container")
+		return nil, err
 	}
-
 	return s.FindOfferFromContainer(identifier, container)
 }

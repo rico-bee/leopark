@@ -25,21 +25,28 @@ func (h *MarketplaceHandler) Apply(request *processor_pb2.TpProcessRequest, cont
 	state := &MarketState{
 		Context: context,
 		Timeout: 2,
+		State:   make(map[string][]byte),
 	}
 	log.Println("applying the processor handler")
 
 	payload := NewMarketPayload(string(request.Payload))
 	if payload.IsCreateAccount() {
+		log.Println("handling account")
 		handleAccountCreation(payload.CreateAccount(), request.Header, state)
 	} else if payload.IsCreateAsset() {
+		log.Println("handling asset")
 		handleAssetCreation(payload.CreateAsset(), request.Header, state)
 	} else if payload.IsCreateHolding() {
+		log.Println("handling holding")
 		handleHoldingCreation(payload.CreateHolding(), request.Header, state)
 	} else if payload.IsCreateOffer() {
+		log.Println("handling offer")
 		handleOfferCreation(payload.CreateOffer(), request.Header, state)
 	} else if payload.IsAcceptOffer() {
+		log.Println("handling accept account")
 		handleOfferAcceptance(payload.AcceptOffer(), request.Header, state)
 	} else if payload.IsCloseOffer() {
+		log.Println("handling close account")
 		handleCloseOffer(payload.CloseOffer(), request.Header, state)
 	}
 	return nil

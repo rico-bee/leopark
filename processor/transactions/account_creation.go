@@ -11,7 +11,7 @@ import (
 func handleAccountCreation(createAcc *pb.CreateAccount, header *pb2.TransactionHeader, state *MarketState) ([]string, error) {
 	acc, err := state.GetAccount(header.SignerPublicKey)
 	if err != nil {
-		log.Println("warning:cannot find the account")
+		log.Println("account:cannot find the account")
 	}
 	if acc != nil {
 		msg := fmt.Sprintf("Account with public key %s already exists", header.SignerPublicKey)

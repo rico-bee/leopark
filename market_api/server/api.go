@@ -47,6 +47,7 @@ func bindRequestBody(r *http.Request, dto interface{}) {
 }
 
 func (server *Server) handleRegistration(w http.ResponseWriter, r *http.Request) {
+	log.Println("are we getting here.....")
 	register := &AccountRequest{}
 	bindRequestBody(r, register)
 	req := pb.CreateAccountRequest{

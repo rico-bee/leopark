@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	db "gopkg.in/gorethink/gorethink.v4"
 	"log"
@@ -23,7 +24,21 @@ func NewDBServer(url string) (*DbServer, error) {
 	}
 
 	server := &DbServer{
+		Name:    "market",
 		session: session,
+	}
+
+	_, err = db.DBCreate("market").Run(server.session)
+	if err != nil {
+		log.Println("failed to create market db" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("blocks").Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.blocks" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("account").Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.blocks" + err.Error())
 	}
 	return server, nil
 }
@@ -34,6 +49,7 @@ func (s *DbServer) fetch(table, id string) (interface{}, error) {
 	err = cursor.One(&row)
 	if err != nil {
 		log.Println("query error:" + err.Error())
+		return nil, err
 	}
 	cursor.Close()
 	return &row, err
@@ -48,6 +64,7 @@ func (s *DbServer) Table(tableName string) db.Term {
 }
 
 func (s *DbServer) Exec(term db.Term) (*db.Cursor, error) {
+
 	return term.Run(s.session)
 }
 
@@ -66,31 +83,50 @@ func (s *DbServer) LastKnownBlocks(numOfBlocks int) ([]string, error) {
 	return rows[numOfRows-numOfBlocks:], nil
 }
 
-func (s *DbServer) DropFork(blockNum int64) (map[string]int64, error) {
-	cursor, err := db.DB(s.Name).Table("blocks").Filter(db.Row.Field("block_num").Ge(blockNum)).Delete().Run(s.session)
+type CursorResult struct {
+	Deleted   int `json:"deleted"`
+	Errors    int `json:"errors"`
+	Inserted  int `json:"inserted"`
+	Replaced  int `json:"replaced"`
+	Skipped   int `json:"skipped"`
+	Unchanged int `json:"unchanged"`
+}
+
+func unmarshalCursor(v interface{}, ret *CursorResult) {
+	vBytes, _ := json.Marshal(v)
+	err := json.Unmarshal(vBytes, ret)
+	if err != nil {
+		ret = nil
+	}
+}
+
+func (s *DbServer) DropFork(blockNum int64) (*CursorResult, error) {
+	dbr, err := db.DB(s.Name).Table("blocks").Filter(db.Row.Field("block_num").Ge(blockNum)).Delete().Run(s.session)
 	if err != nil {
 		log.Println("failed to query:" + err.Error())
 		return nil, err
 	}
-	items := map[string]int64{}
-	err = cursor.All(&items)
-
-	cursor, err = db.DB(s.Name).TableList().ForEach(func(args ...db.Term) {
-		db.Branch(
-			db.Eq(args[0], "blocks"),
+	ret1 := &CursorResult{}
+	unmarshalCursor(dbr, ret1)
+	dtr, err := db.DB(s.Name).TableList().ForEach(func(table db.Term) interface{} {
+		log.Println("table name:" + table.String())
+		return db.Branch(
+			db.Eq(table, "blocks"),
 			[]string{},
-			db.Eq(args[0], "auth"),
+			db.Eq(table, "auth"),
 			[]string{},
-			db.DB(s.Name).Table(args[0]).Filter(db.Row.Field("start_block_num").Ge(blockNum)).Delete(),
+			db.DB(s.Name).Table(table).Filter(db.Row.Field("start_block_num").Ge(blockNum)).Delete(),
 		)
 	}).Run(s.session)
 
-	items2 := map[string]int64{}
-	err = cursor.All(&items2)
-
-	ret := map[string]int64{}
-	for k, v := range items {
-		ret[k] = v + items2[k]
-	}
-	return ret, nil
+	ret2 := &CursorResult{}
+	unmarshalCursor(dtr, ret2)
+	return &CursorResult{
+		Deleted:   ret1.Deleted + ret2.Deleted,
+		Errors:    ret1.Errors + ret2.Errors,
+		Inserted:  ret1.Inserted + ret2.Inserted,
+		Replaced:  ret1.Replaced + ret2.Replaced,
+		Skipped:   ret1.Skipped + ret2.Skipped,
+		Unchanged: ret1.Unchanged + ret2.Unchanged,
+	}, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	proto "github.com/golang/protobuf/proto"
 	events "github.com/hyperledger/sawtooth-sdk-go/protobuf/events_pb2"
 	transaction "github.com/hyperledger/sawtooth-sdk-go/protobuf/transaction_receipt_pb2"
@@ -16,62 +17,87 @@ var (
 	NS_REGEX, _ = regexp.Compile("^" + addresser.NS)
 )
 
-func processEventList(eventStream <-chan *events.EventList, db *DbServer) {
-	eventList := <-eventStream
+func blockParser(done <-chan interface{}, es <-chan *events.Event) <-chan *Block {
 	blockStream := make(chan *Block)
-	blockCommitStream := make(chan *events.Event)
-	stateChangeStream := make(chan *events.Event)
-
-	defer close(blockCommitStream)
-	defer close(stateChangeStream)
-	defer close(blockStream)
-
-	go parseNewBlock(blockCommitStream, blockStream)
-	go processStateChange(stateChangeStream, blockStream, db)
-	for _, e := range eventList.Events {
-		log.Println("processing event:" + e.EventType)
+	go func() {
+		defer close(blockStream)
+		var block Block
+		e := <-es
 		if e.EventType == "sawtooth/block-commit" {
-			blockCommitStream <- e
-		} else if e.EventType == "sawtooth/state-delta" {
-			stateChangeStream <- e
-		}
-	}
-}
-
-func parseNewBlock(eventStream <-chan *events.Event, blockStream chan<- *Block) {
-	block := &Block{}
-	e := <-eventStream
-	for _, a := range e.Attributes {
-		if a.Key == "block_id" {
-			block.BlockId = a.Value
-		}
-		if a.Key == "block_num" {
-			blockNum, err := strconv.ParseInt(a.Value, 10, 64)
-			if err != nil {
-				continue
+			for _, a := range e.Attributes {
+				if a.Key == "block_id" {
+					block.BlockId = a.Value
+				}
+				if a.Key == "block_num" {
+					blockNum, err := strconv.ParseInt(a.Value, 10, 64)
+					if err != nil {
+						log.Println("corrupted block number detected from " + e.EventType)
+						return
+					}
+					block.BlockNum = blockNum
+				}
 			}
-			block.BlockNum = blockNum
+			log.Println("parsing block out:" + block.BlockId)
+			blockStream <- &block
 		}
-	}
-	blockStream <- block
+	}()
+	return blockStream
 }
 
-func processStateChange(eventStream <-chan *events.Event, blockStream <-chan *Block, db *DbServer) {
-	b := <-blockStream
-	isDuplicate := resolveIfForked(db, b.BlockNum, b.BlockId)
-	if !isDuplicate {
-		go stateChanges(eventStream, b, db)
-	}
+func processEventList(done <-chan interface{}, es <-chan *events.Event, db *DbServer) {
+	blockCommitStream := make(chan *events.Event)
+	blockDeltaStream := make(chan *events.Event)
+	go func() {
+		defer close(blockCommitStream)
+		defer close(blockDeltaStream)
+		for e := range es {
+			log.Println("processing:" + e.EventType)
+			if e.EventType == "sawtooth/state-delta" {
+				select {
+				case <-done:
+					return
+				case blockDeltaStream <- e:
+				}
+			} else if e.EventType == "sawtooth/block-commit" {
+				select {
+				case <-done:
+					return
+				case blockCommitStream <- e:
+				}
+			}
+		}
+	}()
+	bs := blockParser(done, blockCommitStream)
+	processStateChange(done, blockDeltaStream, bs, db)
 }
 
-func stateChanges(eventStream <-chan *events.Event, block *Block, db *DbServer) {
-	e := <-eventStream
+func processStateChange(done <-chan interface{}, deltaStream <-chan *events.Event, blockStream <-chan *Block, db *DbServer) {
+	go func() {
+		for b := range blockStream {
+			log.Println(b.BlockId + "is validated as #" + strconv.FormatInt(b.BlockNum, 10))
+			select {
+			case <-done:
+				return
+			case e := <-deltaStream:
+				if e != nil && e.EventType == "sawtooth/state-delta" {
+					log.Println("block:" + strconv.FormatInt(b.BlockNum, 10) + "-" + b.BlockId)
+					isDuplicate := resolveIfForked(db, b.BlockNum, b.BlockId)
+					if !isDuplicate {
+						stateChanges(e, b, db)
+					}
+				}
+			}
+		}
+	}()
+}
+
+func stateChanges(e *events.Event, block *Block, db *DbServer) {
 	var stateChangeList transaction.StateChangeList
 	err := proto.Unmarshal(e.Data, &stateChangeList)
 	if err != nil {
-		//return nil, errors.New(err.Error())
 		log.Println(err.Error())
 	}
+	log.Println("state changes handler" + strconv.Itoa(len(stateChangeList.StateChanges)))
 	states := []*transaction.StateChange{}
 	for _, s := range stateChangeList.StateChanges {
 		log.Println("checking:" + s.Address)
@@ -84,18 +110,25 @@ func stateChanges(eventStream <-chan *events.Event, block *Block, db *DbServer) 
 }
 
 func resolveIfForked(db *DbServer, blockNum int64, blockId string) bool {
+	log.Println("calling resolveifforked")
 	oldBlk, err := db.fetch("blocks", blockId)
 	if err != nil {
-		log.Println(err.Error())
-	}
-	if oldBlk != nil {
-		oBlock := oldBlk.(*Block)
-		if oBlock.BlockNum == blockNum {
-			return true
-		}
-		ret, err := db.DropFork(blockNum)
-		if ret["deleted"] == 0 {
-			log.Println("Failed to drop forked resources since block:" + blockId + ":" + err.Error())
+		log.Println("cannot fetch old blocks" + err.Error())
+	} else {
+		if oldBlk != nil {
+			jb, err := json.Marshal(oldBlk)
+			oBlock := &Block{}
+			err = json.Unmarshal(jb, oBlock)
+			if oBlock.BlockNum == blockNum {
+				return true
+			}
+			ret, err := db.DropFork(blockNum)
+			if ret.Deleted == 0 {
+				if err != nil {
+					log.Println("query failed:" + err.Error())
+				}
+				log.Println("Failed to drop forked resources since block: #" + strconv.FormatInt(blockNum, 10))
+			}
 		}
 	}
 	return false
@@ -126,22 +159,33 @@ func mapAddresSpaceToTable(space addresser.Space) string {
 func findIndex(space addresser.Space, r MsgObj) (string, string) {
 	switch space {
 	case addresser.SpaceAccount:
-		return "public_key", r.(Account).PublicKey
+		return "public_key", r.(*Account).PublicKey
 	case addresser.SpaceAsset:
-		return "name", r.(Asset).Name
+		return "name", r.(*Asset).Name
 	case addresser.SpaceHolding:
-		return "id", r.(Holding).Id
+		return "id", r.(*Holding).Id
 	case addresser.SpaceOffer:
-		return "id", r.(Offer).Id
+		return "id", r.(*Offer).Id
 	}
 	return "", ""
 }
 
+func printObj(v interface{}) {
+	vBytes, _ := json.Marshal(v)
+	log.Println(string(vBytes))
+}
+
 func applyStateChanges(db *DbServer, changes []*transaction.StateChange, blockNum int64) {
+	log.Println("applying changes")
 	for _, c := range changes {
 		resources := MapDataToContainer(c.Address, blockNum, c.Value)
 		for _, r := range resources {
-			update(db, blockNum, c.Address, r)
+			log.Println("updating resource:")
+			printObj(r)
+			_, err := update(db, blockNum, c.Address, r)
+			if err != nil {
+				log.Println("why we cannot update db:" + err.Error())
+			}
 		}
 	}
 }
@@ -152,10 +196,10 @@ func update(db *DbServer, blockNum int64, address string, resource MsgObj) (*r.C
 	if table == "" {
 		log.Println("invalid address detected, cannot update the block")
 	}
-
-	idx, idxVal := findIndex(space, resource)
+	log.Println("updating in " + table)
+	_, idxVal := findIndex(space, resource)
 	query := db.Table(table)
-	updateQuery := query.GetAll(idxVal, map[string]string{"index": idx}).Filter(r.Row.Field("start_block_num").Eq(math.MaxInt64)).Update(map[string]interface{}{
+	updateQuery := query.GetAll(idxVal).Filter(r.Row.Field("start_block_num").Eq(math.MaxInt64)).Update(map[string]interface{}{
 		"end_block_num": blockNum,
 	}).Merge(query.Insert(resource).Without("replaced"))
 

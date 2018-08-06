@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/alecthomas/kingpin"
+	//"github.com/alecthomas/kingpin"
 	server "github.com/rico-bee/leopark/market_api/server"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"google.golang.org/grpc"
@@ -28,6 +28,7 @@ func main() {
 	c := pb.NewMarketClient(conn)
 	// Contact the server and print out its response.
 	apiServer, err := server.NewServer(c)
+
 	if err != nil {
 		fmt.Printf("Failed to create Server: %s\n", err.Error())
 		os.Exit(1)

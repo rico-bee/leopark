@@ -10,12 +10,30 @@ import (
 
 type MsgObj interface{}
 
+func containerFromType(space addresser.Space) proto.Message {
+	switch space {
+	case addresser.SpaceAccount:
+		return &market.AccountContainer{}
+	case addresser.SpaceAsset:
+		return &market.AssetContainer{}
+	case addresser.SpaceHolding:
+		return &market.HoldingContainer{}
+	case addresser.SpaceOffer:
+		return &market.OfferContainer{}
+	}
+	return nil
+}
+
 func MapDataToContainer(address string, blockNum int64, data []byte) []MsgObj {
 	addressType := addresser.AddressOf(address)
 	if addressType == addresser.SpaceOfferHistory {
 		return []MsgObj{}
 	}
-	var message proto.Message
+	message := containerFromType(addressType)
+	if message == nil {
+		log.Println("ignore message from:" + address)
+		return nil
+	}
 	err := proto.Unmarshal(data, message)
 	if err != nil {
 		log.Println("failed to parse container data:" + err.Error())

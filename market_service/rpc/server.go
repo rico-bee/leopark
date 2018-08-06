@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"encoding/hex"
 	"errors"
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	mktpb "github.com/rico-bee/leopark/market"
@@ -11,6 +12,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"time"
 )
 
 const (
@@ -28,17 +30,7 @@ type server struct {
 func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error) {
 	privateKey := s.ctx.NewRandomPrivateKey()
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
-	batches, signature := transaction.CreateAccount(signer, s.signer, in.Name, in.Email)
-	if signature == "" {
-		log.Fatal("Failed to create account")
-	}
-	err := s.validator.BatchRequest(batches)
-	if err != nil {
-		log.Println("failed to send batch request")
-	}
-
 	hashPwd, err := HashPassword(in.Password)
-	log.Println("receive password:" + in.Password + ", hashed: " + hashPwd)
 	authInfo := &AuthInfo{
 		Email:      in.Email,
 		PwdHash:    hashPwd,
@@ -50,15 +42,30 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 	if err != nil {
 		return nil, err
 	}
+
+	batches, signature := transaction.CreateAccount(signer, s.signer, in.Name, in.Email)
+	if signature == "" {
+		log.Fatal("Failed to create account")
+	}
+	err = s.validator.BatchRequest(batches)
+	if err != nil {
+		log.Println("failed to send batch request")
+	}
+	log.Println("creating account for : " + in.Email)
+	log.Println("checking batch for : " + signature)
+	batchIds := []string{signature}
+	time.Sleep(5 * time.Second)
+	committed, err := s.validator.CheckBatchStatus(batchIds)
+	if !committed {
+		return nil, err
+	}
 	tokenString, err := GenerateAuthToken(authInfo)
-	log.Println("token string:" + tokenString)
 	return &pb.CreateAccountResponse{Token: tokenString}, nil
 }
 
 func (s *server) DoAuthoriseAccount(ctx context.Context, in *pb.AuthoriseAccountRequest) (*pb.AuthoriseAccountResponse, error) {
 	auth, err := s.db.FindUser(in.Email)
 	if err != nil {
-		log.Println("cannot find user....")
 		return nil, err
 	}
 	if !CheckPasswordHash(in.Password, auth.PwdHash) {
@@ -66,7 +73,6 @@ func (s *server) DoAuthoriseAccount(ctx context.Context, in *pb.AuthoriseAccount
 		return &pb.AuthoriseAccountResponse{}, errors.New("invalid password")
 	}
 	tokenString, err := GenerateAuthToken(auth)
-	log.Println("token:" + tokenString)
 	return &pb.AuthoriseAccountResponse{Token: tokenString}, nil
 }
 
@@ -81,9 +87,16 @@ func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (
 		log.Println("parse auth:" + err.Error())
 		return nil, err
 	}
-	privateKey := signing.NewSecp256k1PrivateKey([]byte(auth.PrivateKey))
+
+	pk, err := hex.DecodeString(auth.PrivateKey)
+	if err != nil {
+		log.Println("failed to decode private key:" + err.Error())
+		return nil, err
+	}
+	privateKey := signing.NewSecp256k1PrivateKey(pk)
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
 
+	log.Println("creating asset " + in.Name + " for " + auth.Email + ", with private key:" + auth.PrivateKey)
 	rules := []*mktpb.Rule{}
 	for _, rule := range in.Rules {
 		rules = append(rules, &mktpb.Rule{
@@ -94,17 +107,18 @@ func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (
 
 	batches, signature := transaction.CreateAsset(signer, s.signer, in.Name, in.Description, rules)
 	if signature == "" {
-		log.Fatal("Failed to create asset")
+		log.Println("Failed to create asset")
 	}
 	err = s.validator.BatchRequest(batches)
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
-
-	err = s.db.CreateAsset(in.Name, in.Description, in.Rules)
-	if err != nil {
-		log.Println(err.Error())
-		return nil, errors.New("failed to create asset in db")
+	log.Println("checking batch for : " + signature)
+	batchIds := []string{signature}
+	time.Sleep(5 * time.Second)
+	committed, err := s.validator.CheckBatchStatus(batchIds)
+	if !committed {
+		return nil, err
 	}
 	return &pb.CreateAssetResponse{Message: "success"}, nil
 }
@@ -118,22 +132,30 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 	if err != nil {
 		return nil, err
 	}
-	privateKey := signing.NewSecp256k1PrivateKey([]byte(auth.PrivateKey))
+	pk, err := hex.DecodeString(auth.PrivateKey)
+	if err != nil {
+		log.Println("failed to decode private key:" + err.Error())
+		return nil, err
+	}
+	privateKey := signing.NewSecp256k1PrivateKey(pk)
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
 	batches, signature := transaction.CreateHolding(signer, s.signer,
 		req.Identifier,
 		req.Label, req.Descrption, req.Asset, req.Quantity)
+
 	if signature == "" {
-		log.Fatal("Failed to create account")
+		log.Println("Failed to create account")
 	}
 	err = s.validator.BatchRequest(batches)
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
-	err = s.db.CreateHolding(req.Identifier, req.Label, req.Asset, req.Descrption, req.Quantity)
-	if err != nil {
-		log.Println(err.Error())
-		return nil, errors.New("failed to create holding in db")
+	log.Println("creating holding " + req.Identifier + " for " + auth.Email + ", with private key:" + auth.PrivateKey)
+	batchIds := []string{signature}
+	time.Sleep(5 * time.Second)
+	committed, err := s.validator.CheckBatchStatus(batchIds)
+	if !committed {
+		return nil, err
 	}
 	return &pb.CreateHoldingResponse{Message: "sucess"}, nil
 }
@@ -147,7 +169,12 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 	if err != nil {
 		return nil, err
 	}
-	privateKey := signing.NewSecp256k1PrivateKey([]byte(auth.PrivateKey))
+	pk, err := hex.DecodeString(auth.PrivateKey)
+	if err != nil {
+		log.Println("failed to decode private key:" + err.Error())
+		return nil, err
+	}
+	privateKey := signing.NewSecp256k1PrivateKey(pk)
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
 	mktRules, err := MapAssetRule(req.Rules)
 	if err != nil {
@@ -161,6 +188,12 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 	err = s.validator.BatchRequest(batches)
 	if err != nil {
 		log.Println("failed to send batch request")
+	}
+
+	batchIds := []string{signature}
+	committed, err := s.validator.CheckBatchStatus(batchIds)
+	if !committed {
+		return nil, err
 	}
 	return &pb.CreateOfferResponse{Message: "success"}, nil
 }

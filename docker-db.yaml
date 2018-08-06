@@ -11,22 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# -----------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-accounts:
-  - label: LeoPark community
-    description: The sole issuing authoririty for LEO coin
-    email: admin@leotech.com.au
-    password: password
-    assets:
-      - name: LEOCoin
-        description: The cryptocurrency that fits in your pocket
-        rules:
-          - type: OWNER_HOLDINGS_INFINITE
-    holdings:
-      - label: LEOCoin Source
-        description: An unlimited supply new LEOCoin
-        asset: LEOCoin
-        quantity: 9007199254740991
-    renewables: []
-      
+version: '2.1'
+
+services:
+  rethinkdb:
+    image: rethinkdb:latest
+    ports:  
+      - "38080:8080"
+      - "28015:28015"   
+      - "29015:29015"   

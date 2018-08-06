@@ -19,24 +19,23 @@ const (
 type Subscriber struct {
 	connection messaging.Connection
 	db         *DbServer
+	events     chan *events.EventList
 	done       <-chan interface{}
 }
 
-func (s *Subscriber) checkResponse(corId string) (validator.Message_MessageType, proto.Message, error) {
-	id, msg, err := s.connection.RecvMsgWithId(corId)
-
-	log.Println("received message:" + id)
+func (s *Subscriber) checkResponse(corId string, message proto.Message) (validator.Message_MessageType, error) {
+	_, msg, err := s.connection.RecvMsgWithId(corId)
+	log.Println("received message:" + corId)
 	if err != nil {
 		log.Println(err.Error())
-		return validator.Message_DEFAULT, nil, err
+		return validator.Message_DEFAULT, err
 	}
 
-	var message proto.Message
 	err = proto.Unmarshal(msg.Content, message)
 	if err != nil {
-		return validator.Message_DEFAULT, nil, err
+		return validator.Message_DEFAULT, err
 	}
-	return validator.Message_DEFAULT, nil, err
+	return msg.MessageType, nil
 }
 
 func (s *Subscriber) Start(knownIds []string) error {
@@ -44,6 +43,9 @@ func (s *Subscriber) Start(knownIds []string) error {
 		knownIds = []string{NULL_BLOCK_ID}
 	}
 
+	for _, id := range knownIds {
+		log.Println("known id:" + id)
+	}
 	log.Println("subscribing to state delta events")
 	blockSub := &events.EventSubscription{
 		EventType: "sawtooth/block-commit",
@@ -67,52 +69,57 @@ func (s *Subscriber) Start(knownIds []string) error {
 		log.Println("corrupted msg" + err.Error())
 	}
 	corId, err := s.connection.SendNewMsg(validator.Message_CLIENT_EVENTS_SUBSCRIBE_REQUEST, rawBytes)
-	msgType, msg, err := s.checkResponse(corId)
+	log.Println("send subscribe request:" + corId)
+	if err != nil {
+		log.Fatal("failed to send subscribe request:" + err.Error())
+	}
+	msg := &client.ClientEventsSubscribeResponse{}
+	msgType, err := s.checkResponse(corId, msg)
 	if msgType == validator.Message_CLIENT_EVENTS_SUBSCRIBE_RESPONSE {
-		subscribeRes, ok := msg.(*client.ClientEventsSubscribeResponse)
-		if !ok {
-			log.Println("failed to parse out the reponse")
-			return errors.New("cannot parse out subscribe response")
-		}
-		if subscribeRes.Status == client.ClientEventsSubscribeResponse_UNKNOWN_BLOCK {
+		if msg.Status == client.ClientEventsSubscribeResponse_UNKNOWN_BLOCK {
 			// retrying the service...
+			log.Println("retrying to subscribe...")
 			s.Start([]string{})
 		}
 	} else {
 		return errors.New("failed to subscribe to validator")
 	}
 
-	eventStream := make(chan *events.EventList)
-	defer close(eventStream)
-	go processEventList(eventStream, s.db)
 	for {
-		select {
-		case <-s.done:
-			log.Println("gracefully exit subscribing...")
-			return nil
-		default:
-		}
-		s.subscribe(eventStream)
+		es := s.subscribe()
+		processEventList(s.done, es, s.db)
 	}
 }
 
-func (s *Subscriber) subscribe(eventStream chan<- *events.EventList) {
-	id, msg, err := s.connection.RecvMsg()
-	if err != nil {
-		log.Println("failed to receive the message:" + err.Error())
-	} else {
-		log.Println("message received:" + id)
-		var eventsList events.EventList
-		err = proto.Unmarshal(msg.Content, &eventsList)
+func (s *Subscriber) subscribe() <-chan *events.Event {
+	log.Println("tried to subscribe")
+	_, msg, err := s.connection.RecvMsg()
+	eventStream := make(chan *events.Event)
+	go func() {
+		defer close(eventStream)
 		if err != nil {
-			log.Println("err:" + err.Error())
-			return
+			log.Println("failed to receive the message:" + err.Error())
+		} else {
+			log.Println("message received:" + msg.MessageType.String())
+			var eventsList events.EventList
+			err = proto.Unmarshal(msg.Content, &eventsList)
+			if err != nil {
+				log.Println("err:" + err.Error())
+				return
+			}
+			for _, e := range eventsList.Events {
+				select {
+				case <-s.done:
+					return
+				case eventStream <- e:
+				}
+			}
 		}
-		eventStream <- &eventsList
-	}
+	}()
+	return eventStream
 }
 
-func NewSubscriber(validatorUrl string, db *DbServer) *Subscriber {
+func NewSubscriber(validatorUrl string, done <-chan interface{}, db *DbServer) *Subscriber {
 	zmqCtx, err := zmq.NewContext()
 	if err != nil {
 		log.Fatalln("cannot create zmq context")
@@ -125,7 +132,8 @@ func NewSubscriber(validatorUrl string, db *DbServer) *Subscriber {
 
 	return &Subscriber{
 		connection: conn,
-		done:       make(chan interface{}),
+		events:     make(chan *events.EventList),
+		done:       done,
 		db:         db,
 	}
 }
@@ -137,11 +145,11 @@ func (s *Subscriber) Stop() {
 		log.Println("corrupted msg" + err.Error())
 	}
 	corId, err := s.connection.SendNewMsg(validator.Message_CLIENT_EVENTS_UNSUBSCRIBE_REQUEST, rawBytes)
-	msgType, msg, err := s.checkResponse(corId)
+	msg := &client.ClientEventsUnsubscribeResponse{}
+	msgType, err := s.checkResponse(corId, msg)
 	if msgType == validator.Message_CLIENT_EVENTS_SUBSCRIBE_RESPONSE {
-		res, ok := msg.(*client.ClientEventsUnsubscribeResponse)
-		if !ok || res.Status != client.ClientEventsUnsubscribeResponse_OK {
-			log.Println("failed to parse out the reponse")
+		if msg.Status != client.ClientEventsUnsubscribeResponse_OK {
+			log.Println("failed to unsubscribe from validator" + msg.Status.String())
 		}
 	} else {
 		log.Fatal("corrupted response from:Message_CLIENT_EVENTS_UNSUBSCRIBE_REQUEST")
