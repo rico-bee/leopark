@@ -11,14 +11,23 @@ import (
 )
 
 func (h *Handler) FindAccount(w http.ResponseWriter, r *http.Request) {
-	assets, err := h.Db.FindAssets()
+	req := &FindAccountRequest{}
+	bindRequestBody(r, req)
+
+	account, err := h.Db.FindUser(req.Email)
+
 	if err != nil {
 		log.Println("failed to find assets:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-	data, err := json.Marshal(assets)
+
+	res := &FindAccountResponse{
+		Email:     account.Email,
+		PublicKey: account.PublicKey,
+	}
+	data, err := json.Marshal(res)
 	if err != nil {
 		log.Println("failed to serialise assets:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -40,14 +49,39 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	res, err := h.RpcClient.DoCreateAccount(ctx, &req)
 	if err != nil {
 		log.Println("failed to make rpc call:" + err.Error())
-		return
+
 	}
-	account := &AccountResponse{
-		Token: res.Token,
+	hashPwd, err := crypto.HashPassword(register.Password)
+	if err != nil {
+		log.Println("cannot hash password:" + err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
 	}
-	response, _ := json.Marshal(account)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	authInfo := &crypto.AuthInfo{
+		Email:      register.Email,
+		PwdHash:    hashPwd,
+		PrivateKey: res.PrivateKey,
+		PublicKey:  res.PublicKey,
+	}
+
+	err = h.Db.CreateUser(authInfo)
+	if err != nil {
+		log.Println("failed to create auth in db for " + authInfo.Email)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	tokenString, err := crypto.GenerateAuthToken(authInfo)
+	if err != nil {
+		log.Println("failed to create jwt token from auth:" + authInfo.Email)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	var response []byte
+	if err == nil && tokenString != "" {
+		account := &AccountResponse{
+			Token: tokenString,
+		}
+		response, _ = json.Marshal(account)
+		w.WriteHeader(http.StatusOK)
+	}
 	w.Write(response)
 }
 
@@ -57,6 +91,7 @@ func (h *Handler) FindAuthorisation(w http.ResponseWriter, r *http.Request) {
 	// Contact the server and print out its response.
 
 	auth, err := h.Db.FindUser(authorise.Email)
+	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 	}
@@ -73,7 +108,6 @@ func (h *Handler) FindAuthorisation(w http.ResponseWriter, r *http.Request) {
 		Token: tokenString,
 	}
 	response, _ := json.Marshal(account)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }

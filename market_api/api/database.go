@@ -88,3 +88,12 @@ func (s *DbServer) ListUsers() ([]crypto.AuthInfo, error) {
 	}
 	return authInfoList, nil
 }
+
+func (s *DbServer) CreateUser(authInfo *AuthInfo) error {
+	return r.DB("market").Table("auth").Insert(map[string]string{
+		"email":      authInfo.Email,
+		"pwdHash":    authInfo.PwdHash,
+		"privateKey": authInfo.PrivateKey,
+		"publicKey":  authInfo.PublicKey,
+	}).Exec(s.session)
+}

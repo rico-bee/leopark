@@ -8,6 +8,15 @@ type FindAssetResponse struct {
 	Asset *Asset `json: "asset"`
 }
 
+type FindAccountRequest struct {
+	Email string `json:"email"`
+}
+
+type FindAccountResponse struct {
+	Email     string `json:"email"`
+	PublicKey string `json:"public_key"`
+}
+
 type CreateAccountRequest struct {
 	Email    string `json:"email"`
 	Name     string `json:"name"`

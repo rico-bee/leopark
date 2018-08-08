@@ -23,30 +23,16 @@ type server struct {
 	privateKey signing.PrivateKey
 	signer     *signing.Signer
 	validator  *transaction.SawtoothAPI
-	db         *DbServer
 }
 
 func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error) {
 	privateKey := s.ctx.NewRandomPrivateKey()
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
-	hashPwd, err := HashPassword(in.Password)
-	authInfo := &AuthInfo{
-		Email:      in.Email,
-		PwdHash:    hashPwd,
-		PrivateKey: privateKey.AsHex(),
-		PublicKey:  signer.GetPublicKey().AsHex(),
-	}
-
-	err = s.db.CreateUser(authInfo)
-	if err != nil {
-		return nil, err
-	}
-
 	batches, signature := transaction.CreateAccount(signer, s.signer, in.Name, in.Email)
 	if signature == "" {
 		log.Fatal("Failed to create account")
 	}
-	err = s.validator.BatchRequest(batches)
+	err := s.validator.BatchRequest(batches)
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
@@ -58,8 +44,10 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 	if !committed {
 		return nil, err
 	}
-	tokenString, err := GenerateAuthToken(authInfo)
-	return &pb.CreateAccountResponse{Token: tokenString}, nil
+	return &pb.CreateAccountResponse{
+		PrivateKey: privateKey.AsHex(),
+		PublicKey:  signer.GetPublicKey().AsHex(),
+	}, nil
 }
 
 func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (*pb.CreateAssetResponse, error) {
@@ -185,14 +173,10 @@ func (s *server) DoCloseOffer(ctx context.Context, req *pb.CloseOfferRequest) (*
 
 func newRpcServer() *server {
 	api := transaction.NewSawtoothApi("tcp://localhost:4040")
-	db, err := NewDBServer("localhost:28015")
-	if err != nil {
-		return nil
-	}
+
 	rpcServer := &server{
 		ctx:       signing.CreateContext("secp256k1"),
 		validator: api,
-		db:        db,
 	}
 	rpcServer.privateKey = signing.NewSecp256k1PrivateKey([]byte(RpcConfig.batchPrivateKey))
 	rpcServer.signer = signing.NewCryptoFactory(rpcServer.ctx).NewSigner(rpcServer.privateKey)

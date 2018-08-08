@@ -38,7 +38,8 @@ message CreateAccountRequest {
 
 // The response message containing the greetings
 message CreateAccountResponse {
-  string token = 1;
+  string publicKey = 1;
+  string privateKey = 2;
 }
 
 message AssetRule {
