@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"encoding/hex"
-	"errors"
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	mktpb "github.com/rico-bee/leopark/market"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
@@ -63,40 +62,14 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 	return &pb.CreateAccountResponse{Token: tokenString}, nil
 }
 
-func (s *server) DoAuthoriseAccount(ctx context.Context, in *pb.AuthoriseAccountRequest) (*pb.AuthoriseAccountResponse, error) {
-	auth, err := s.db.FindUser(in.Email)
-	if err != nil {
-		return nil, err
-	}
-	if !CheckPasswordHash(in.Password, auth.PwdHash) {
-		log.Println("invalid password....")
-		return &pb.AuthoriseAccountResponse{}, errors.New("invalid password")
-	}
-	tokenString, err := GenerateAuthToken(auth)
-	return &pb.AuthoriseAccountResponse{Token: tokenString}, nil
-}
-
 func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (*pb.CreateAssetResponse, error) {
-	auth, err := ParseAuthToken(in.Token)
-	if err != nil {
-		log.Println("parse auth:" + err.Error())
-		return nil, err
-	}
-	auth, err = s.db.FindUser(auth.Email)
-	if err != nil {
-		log.Println("parse auth:" + err.Error())
-		return nil, err
-	}
-
-	pk, err := hex.DecodeString(auth.PrivateKey)
+	pk, err := hex.DecodeString(in.PrivateKey)
 	if err != nil {
 		log.Println("failed to decode private key:" + err.Error())
 		return nil, err
 	}
 	privateKey := signing.NewSecp256k1PrivateKey(pk)
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
-
-	log.Println("creating asset " + in.Name + " for " + auth.Email + ", with private key:" + auth.PrivateKey)
 	rules := []*mktpb.Rule{}
 	for _, rule := range in.Rules {
 		rules = append(rules, &mktpb.Rule{
@@ -124,15 +97,7 @@ func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (
 }
 
 func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingRequest) (*pb.CreateHoldingResponse, error) {
-	auth, err := ParseAuthToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
-	auth, err = s.db.FindUser(auth.Email)
-	if err != nil {
-		return nil, err
-	}
-	pk, err := hex.DecodeString(auth.PrivateKey)
+	pk, err := hex.DecodeString(req.PrivateKey)
 	if err != nil {
 		log.Println("failed to decode private key:" + err.Error())
 		return nil, err
@@ -150,7 +115,6 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
-	log.Println("creating holding " + req.Identifier + " for " + auth.Email + ", with private key:" + auth.PrivateKey)
 	batchIds := []string{signature}
 	time.Sleep(5 * time.Second)
 	committed, err := s.validator.CheckBatchStatus(batchIds)
@@ -161,15 +125,7 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 }
 
 func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) (*pb.CreateOfferResponse, error) {
-	auth, err := ParseAuthToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
-	auth, err = s.db.FindUser(auth.Email)
-	if err != nil {
-		return nil, err
-	}
-	pk, err := hex.DecodeString(auth.PrivateKey)
+	pk, err := hex.DecodeString(req.PrivateKey)
 	if err != nil {
 		log.Println("failed to decode private key:" + err.Error())
 		return nil, err
@@ -199,22 +155,14 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 }
 
 func (s *server) DoAcceptOffer(ctx context.Context, req *pb.AcceptOfferRequest) (*pb.AcceptOfferResponse, error) {
-	auth, err := ParseAuthToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
-	auth, err = s.db.FindUser(auth.Email)
-	if err != nil {
-		return nil, err
-	}
-	privateKey := signing.NewSecp256k1PrivateKey([]byte(auth.PrivateKey))
+	privateKey := signing.NewSecp256k1PrivateKey([]byte(req.PrivateKey))
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
 	batches, signature := transaction.AcceptOffer(signer, s.signer, req.Identifier,
 		uint64(req.Count), MapOfferParticipant(req.Sender), MapOfferParticipant(req.Receiver))
 	if signature == "" {
 		log.Fatal("Failed to create account")
 	}
-	err = s.validator.BatchRequest(batches)
+	err := s.validator.BatchRequest(batches)
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
@@ -222,21 +170,13 @@ func (s *server) DoAcceptOffer(ctx context.Context, req *pb.AcceptOfferRequest) 
 }
 
 func (s *server) DoCloseOffer(ctx context.Context, req *pb.CloseOfferRequest) (*pb.CloseOfferResponse, error) {
-	auth, err := ParseAuthToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
-	auth, err = s.db.FindUser(auth.Email)
-	if err != nil {
-		return nil, err
-	}
-	privateKey := signing.NewSecp256k1PrivateKey([]byte(auth.PrivateKey))
+	privateKey := signing.NewSecp256k1PrivateKey([]byte(req.PrivateKey))
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
 	batches, signature := transaction.CloseOffer(signer, s.signer, req.Id)
 	if signature == "" {
 		log.Fatal("Failed to create account")
 	}
-	err = s.validator.BatchRequest(batches)
+	err := s.validator.BatchRequest(batches)
 	if err != nil {
 		log.Println("failed to send batch request")
 	}

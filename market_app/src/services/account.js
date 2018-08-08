@@ -25,10 +25,7 @@ let account = null
 const getUserAccount = () => {
   return Promise.resolve()
     .then(() => {
-      const publicKey = api.getPublicKey()
-      if (!publicKey) return null
-      if (account && account.publicKey === publicKey) return account
-      return api.get(`accounts/${publicKey}`)
+      return api.get(`account`)
     })
     .then(acct => {
       account = acct

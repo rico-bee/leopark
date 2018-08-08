@@ -20,8 +20,6 @@ package rpc;
 service market {
   // create account 
   rpc doCreateAccount (CreateAccountRequest) returns (CreateAccountResponse) {}
-  // create account 
-  rpc doAuthoriseAccount (AuthoriseAccountRequest) returns (AuthoriseAccountResponse) {}
   // create asset 
   rpc doCreateAsset (CreateAssetRequest) returns (CreateAssetResponse) {}
   // create holding
@@ -43,17 +41,6 @@ message CreateAccountResponse {
   string token = 1;
 }
 
-// The request message containing the user's name.
-message AuthoriseAccountRequest {
-  string email = 1;
-  string password = 2;
-}
-
-// The request message containing the user's name.
-message AuthoriseAccountResponse {
-  string token = 1;
-}
-
 message AssetRule {
   int32 type = 1;
   string value = 2; 
@@ -64,7 +51,7 @@ message CreateAssetRequest {
   string name = 1;
   string description = 2;
   repeated AssetRule rules = 3;
-  string token = 4;
+  string privateKey = 4;
 }
 
 // The response message containing the greetings
@@ -79,7 +66,7 @@ message CreateHoldingRequest {
   string descrption = 3;
   string asset = 4;
   int64 quantity = 5;
-  string token = 6;
+  string privateKey = 6;
 }
 
 // The response message containing the greetings
@@ -107,7 +94,7 @@ message CreateOfferRequest {
   MarketplaceHolding source = 4;
   MarketplaceHolding target = 5;
   repeated AssetRule rules = 6;
-  string token = 7;
+  string privateKey = 7;
 }
 
 message CreateOfferResponse {
@@ -119,7 +106,7 @@ message AcceptOfferRequest {
   OfferParticipant sender = 2;
   OfferParticipant receiver = 3;
   int64 count = 4;
-  string token = 5;
+  string privateKey = 5;
 }
 
 message AcceptOfferResponse {
@@ -128,7 +115,7 @@ message AcceptOfferResponse {
 
 message CloseOfferRequest {
   string id = 1;
-  string token = 4;
+  string privateKey = 4;
 }
 
 message CloseOfferResponse {

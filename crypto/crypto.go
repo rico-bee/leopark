@@ -1,4 +1,4 @@
-package server
+package crypto
 
 import (
 	"crypto/aes"
@@ -7,6 +7,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+)
+
+const (
+	AES_KEY     string = "ffffffffffffffffffffffffffffffff"
+	SIGNING_KEY string = "abcdefggfedcbaxyz"
 )
 
 func EncryptKey(aesKey, publicKey, privateKey string) ([]byte, error) {

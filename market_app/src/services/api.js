@@ -46,21 +46,10 @@ const clearAuth = () => {
   return token
 }
 
-/**
- * Parses the authToken to return the logged in user's public key
- */
-const getPublicKey = () => {
-  const token = getAuth()
-  if (!token) return null
-
-  const content = window.atob(token.split('.')[1])
-  return JSON.parse(content).public_key
-}
-
 // Adds Authorization header and prepends API path to url
 const baseRequest = opts => {
   const Authorization = getAuth()
-  //const authHeader = Authorization ? { Authorization } : {}
+  const authHeader = Authorization ? { Authorization } : {}
   const contentType = {"Content-Type": "application/json"}
   opts.headers = _.assign(opts.headers, contentType)
   opts.url = API_PATH + opts.url

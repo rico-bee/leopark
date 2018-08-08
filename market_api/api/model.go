@@ -1,4 +1,4 @@
-package server
+package api
 
 type Account struct {
 	Email      string `gorethink:"email"`

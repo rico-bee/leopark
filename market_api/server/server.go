@@ -1,11 +1,12 @@
 package server
 
 import (
-	// "github.com/auth0/go-jwt-middleware"
-	// jwt "github.com/dgrijalva/jwt-go"
+	//"github.com/auth0/go-jwt-middleware"
+	//jwt "github.com/dgrijalva/jwt-go"//
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	pb "github.com/rico-bee/leopark/market_service/proto/api"
+	// crypto "github.com/rico-bee/leopark/crypto"
+	api "github.com/rico-bee/leopark/market_api/api"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof" //Profiling the API
@@ -19,8 +20,8 @@ type Server struct {
 	listenPort  int
 	region      string
 	environment string
-	rpcClient   pb.MarketClient
 	logger      *logrus.Logger
+	api         *api.Handler
 }
 
 const (
@@ -38,7 +39,7 @@ const (
 )
 
 // NewServer Server
-func NewServer(rpc pb.MarketClient) (*Server, error) {
+func NewServer(handler *api.Handler) (*Server, error) {
 
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{FullTimestamp: true}
@@ -50,7 +51,7 @@ func NewServer(rpc pb.MarketClient) (*Server, error) {
 		profiling:   false,
 		environment: "dev",
 		logger:      logger,
-		rpcClient:   rpc,
+		api:         handler,
 	}
 	return server, nil
 }
@@ -59,23 +60,18 @@ func NewServer(rpc pb.MarketClient) (*Server, error) {
 func (server *Server) Start() {
 	logrus.Println("starting server...")
 	r := mux.NewRouter()
-	// jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-	// 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-	// 		return []byte("My Secret"), nil
-	// 	},
-	// 	// When set, the middleware verifies that tokens are signed with the specific signing algorithm
-	// 	// If the signing method is not constant the ValidationKeyGetter callback can be used to implement additional checks
-	// 	// Important to avoid security issues described here: https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/
-	// 	SigningMethod: jwt.SigningMethodHS256,
-	// })
-
+	m := r.PathPrefix("/market").Subrouter()
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
-
-	r.HandleFunc("/account", server.handleRegistration).Methods("POST")
-	r.HandleFunc("/authorise", server.handleAuthorisation).Methods("POST")
-	r.HandleFunc("/asset", server.handleCreateAsset).Methods("POST")
+	// no jwt check on register
+	r.HandleFunc("/register", server.api.CreateAccount).Methods("POST")
+	r.HandleFunc("/authorise", server.api.FindAuthorisation).Methods("POST")
+	m.HandleFunc("/account", server.api.FindAccount).Methods("GET")
+	m.HandleFunc("/asset", server.api.CreateAsset).Methods("POST")
+	m.HandleFunc("/asset/list", server.api.FindAssets).Methods("GET")
+	m.HandleFunc("/asset", server.api.FindAsset).Methods("GET")
+	m.Use(jwtMiddleware)
 	corsHandler := handlers.CORS(originsOk, headersOk, methodsOk)(r)
 	http.ListenAndServe(":8088", corsHandler)
 	//Stop Events go here

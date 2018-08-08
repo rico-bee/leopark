@@ -2,7 +2,7 @@ package main
 
 import (
 	processorSdk "github.com/hyperledger/sawtooth-sdk-go/processor"
-	transactions "github.com/rico-bee/leopark/processor/transactions"
+	transactions "github.com/rico-bee/leopark/market_processor/transactions"
 	"log"
 	"os"
 	"os/signal"

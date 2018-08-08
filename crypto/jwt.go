@@ -1,20 +1,22 @@
-package server
+package crypto
 
 import (
 	jwt "github.com/dgrijalva/jwt-go"
-	//	"github.com/hyperledger/sawtooth-sdk-go/signing"
-	"errors"
 	"golang.org/x/crypto/bcrypt"
-)
-
-const (
-	SIGNING_KEY string = "abcdefggfedcbaxyz"
+	"log"
 )
 
 type AuthClaims struct {
 	Email     string `json:"email"`
 	PublicKey string `json:"public_key"`
 	jwt.StandardClaims
+}
+
+type AuthInfo struct {
+	Email      string `gorethink:"email"`
+	PublicKey  string `gorethink:"publicKey"`
+	PwdHash    string `gorethink:"pwdHash,omitempty"`
+	PrivateKey string `gorethink:"privateKey,omitempty"`
 }
 
 func HashPassword(password string) (string, error) {
@@ -27,27 +29,35 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func GenerateAuthToken(email, publicKey string) (string, error) {
+func GenerateAuthToken(auth *AuthInfo) (string, error) {
+
 	claims := AuthClaims{
-		email,
-		publicKey,
+		auth.Email,
+		auth.PublicKey,
 		jwt.StandardClaims{
 			ExpiresAt: 0, // for now, just never expires todo
 			Issuer:    "leopark",
 		},
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(SIGNING_KEY))
 }
 
-func ParseAuthToken(tokenString string) (*AuthClaims, error) {
+func ParseAuthToken(tokenString string) (*AuthInfo, error) {
 	claims := &AuthClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(SIGNING_KEY), nil
 	})
-	claims, ok := token.Claims.(*AuthClaims)
-	if ok && token.Valid {
-		return claims, nil
+	if claims, ok := token.Claims.(*AuthClaims); ok && token.Valid {
+		authInfo := &AuthInfo{
+			Email:     claims.Email,
+			PublicKey: claims.PublicKey,
+		}
+		log.Println("email:" + authInfo.Email)
+		return authInfo, nil
+	} else {
+		log.Println("failed parse the token:" + err.Error())
+		return nil, err
 	}
-	return nil, errors.New("failed parse the token:" + err.Error())
 }

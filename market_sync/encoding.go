@@ -68,7 +68,7 @@ func MapDataToContainer(address string, blockNum int64, data []byte) []MsgObj {
 func mapAccount(blockNum int64, account *market.Account) *Account {
 	return &Account{
 		PublicKey:  account.PublicKey,
-		Email:      account.Label,
+		Email:      account.Description,
 		Holdings:   account.Holdings,
 		BlockRange: BlockRange{StartBlockNum: blockNum, EndBlockNum: math.MaxInt64},
 	}
