@@ -36,25 +36,48 @@ func NewDBServer(url string) (*DbServer, error) {
 	if err != nil {
 		log.Println("failed to create market.blocks" + err.Error())
 	}
-	_, err = db.DB("market").TableCreate("account", db.TableCreateOpts{PrimaryKey: "email"}).Run(server.session)
+	_, err = db.DB("market").TableCreate("account", db.TableCreateOpts{PrimaryKey: "delta_id"}).Run(server.session)
 	if err != nil {
 		log.Println("failed to create market.account" + err.Error())
+	}
+	_, err = db.DB("market").Table("account").IndexCreate("public_key").Run(server.session)
+	if err != nil {
+		log.Println("failed to create secondary idx for market.account" + err.Error())
 	}
 	_, err = db.DB("market").TableCreate("auth", db.TableCreateOpts{PrimaryKey: "email"}).Run(server.session)
 	if err != nil {
 		log.Println("failed to create market.auth" + err.Error())
 	}
-	_, err = db.DB("market").TableCreate("asset", db.TableCreateOpts{PrimaryKey: "name"}).Run(server.session)
+	_, err = db.DB("market").Table("auth").IndexCreate("public_key").Run(server.session)
+	if err != nil {
+		log.Println("failed to create secondary idx for market.auth" + err.Error())
+	}
+
+	_, err = db.DB("market").TableCreate("asset", db.TableCreateOpts{PrimaryKey: "delta_id"}).Run(server.session)
 	if err != nil {
 		log.Println("failed to create market.asset" + err.Error())
 	}
-	_, err = db.DB("market").TableCreate("holding", db.TableCreateOpts{PrimaryKey: "id"}).Run(server.session)
+	_, err = db.DB("market").Table("asset").IndexCreate("name").Run(server.session)
+	if err != nil {
+		log.Println("failed to create secondary idx for market.asset" + err.Error())
+	}
+
+	_, err = db.DB("market").TableCreate("holding", db.TableCreateOpts{PrimaryKey: "delta_id"}).Run(server.session)
 	if err != nil {
 		log.Println("failed to create market.holding" + err.Error())
 	}
-	_, err = db.DB("market").TableCreate("offer", db.TableCreateOpts{PrimaryKey: "id"}).Run(server.session)
+	_, err = db.DB("market").Table("holding").IndexCreate("id").Run(server.session)
+	if err != nil {
+		log.Println("failed to create secondary idx for market.holding" + err.Error())
+	}
+
+	_, err = db.DB("market").TableCreate("offer", db.TableCreateOpts{PrimaryKey: "delta_id"}).Run(server.session)
 	if err != nil {
 		log.Println("failed to create market.offer" + err.Error())
+	}
+	_, err = db.DB("market").Table("offer").IndexCreate("id").Run(server.session)
+	if err != nil {
+		log.Println("failed to create secondary idx for market.offer" + err.Error())
 	}
 	return server, nil
 }

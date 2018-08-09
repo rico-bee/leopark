@@ -202,10 +202,11 @@ func update(db *DbServer, blockNum int64, address string, resource MsgObj) (*r.C
 		log.Println("invalid address detected, cannot update the block")
 	}
 	log.Println("updating in " + table)
-	_, idxVal := findIndex(space, resource)
+	idx, idxVal := findIndex(space, resource)
 	query := db.Table(table)
 	log.Println("end block num:" + strconv.FormatInt(math.MaxInt64, 10))
-	updateQuery := query.GetAll(idxVal).Update(map[string]interface{}{
+	updateQuery := query.GetAllByIndex(idx, idxVal).
+		Filter(r.Row.Field("end_block_num").Ge(math.MaxInt64)).Update(map[string]interface{}{
 		"end_block_num": blockNum,
 	}).Merge(query.Insert(resource).Without("replaced"))
 
