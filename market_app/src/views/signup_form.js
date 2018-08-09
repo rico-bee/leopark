@@ -28,7 +28,7 @@ const accountSubmitter = state => e => {
   const accountKeys = ['email', 'name', 'password']
   const account = _.pick(state, accountKeys)
 
-  api.post('account', account)
+  api.post('register', account)
     .then(res => {
       api.setAuth(res.token)
     })

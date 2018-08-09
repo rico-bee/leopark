@@ -7,7 +7,6 @@ import (
 
 func jwtMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		tokenString := r.Header.Get("Authorization")
 		if len(tokenString) == 0 {
 			w.WriteHeader(http.StatusUnauthorized)

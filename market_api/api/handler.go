@@ -4,11 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	gCtx "github.com/gorilla/context"
-	crypto "github.com/rico-bee/leopark/crypto"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"golang.org/x/net/context"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -82,15 +79,11 @@ func checkJwt(r *http.Request) (string, error) {
 }
 
 func (h *Handler) CurrentUser(w http.ResponseWriter, r *http.Request) (string, error) {
-	user := gCtx.Get(r, "user")
-	authClaim := user.(*crypto.AuthClaims)
-	log.Println("logged in user:" + authClaim.Email)
-	auth, err := h.Db.FindUser(authClaim.Email)
-	if err != nil {
-		log.Println(err.Error())
-		return "", err
+	privateKey := r.Header.Get("privateKey")
+	if privateKey == "" {
+		unauthorised(w)
 	}
-	return auth.PrivateKey, nil
+	return privateKey, nil
 }
 
 func unauthorised(w http.ResponseWriter) {

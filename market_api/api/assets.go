@@ -11,10 +11,7 @@ import (
 
 func (h *Handler) FindAssets(w http.ResponseWriter, r *http.Request) {
 	_, err := h.CurrentUser(w, r)
-	if err != nil {
-		unauthorised(w)
-	}
-
+	log.Println("finding assets....")
 	assets, err := h.Db.FindAssets()
 	if err != nil {
 		log.Println("failed to find assets:" + err.Error())
@@ -27,15 +24,12 @@ func (h *Handler) FindAssets(w http.ResponseWriter, r *http.Request) {
 		log.Println("failed to serialise assets:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+	log.Println("found assets....")
 	w.Write(data)
 }
 
 func (h *Handler) FindAsset(w http.ResponseWriter, r *http.Request) {
 	_, err := h.CurrentUser(w, r)
-	if err != nil {
-		unauthorised(w)
-	}
-
 	req := &FindAssetRequest{}
 	bindRequestBody(r, req)
 	asset, err := h.Db.FindAsset(req.Name)
@@ -64,10 +58,6 @@ func mapRules(rules []*Rule) []*pb.AssetRule {
 
 func (h *Handler) CreateAsset(w http.ResponseWriter, r *http.Request) {
 	privateKey, err := h.CurrentUser(w, r)
-	if err != nil {
-		unauthorised(w)
-	}
-
 	createAsset := &CreateAssetRequest{}
 	bindRequestBody(r, createAsset)
 	// Contact the server and print out its response.

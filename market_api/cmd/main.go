@@ -123,7 +123,7 @@ func main() {
 				Name:        a.Name,
 				Description: a.Description,
 				Rules:       mapRules(a.Rules),
-				Token:       res.Token,
+				PrivateKey:  res.PrivateKey,
 			}
 			_, err := c.DoCreateAsset(ctx, aReq)
 			if err != nil {
@@ -142,7 +142,7 @@ func main() {
 				Descrption: h.Description,
 				Asset:      h.Asset,
 				Quantity:   h.Quantity,
-				Token:      res.Token,
+				PrivateKey: res.PrivateKey,
 			}
 			_, err = c.DoCreateHolding(ctx, hReq)
 			if err != nil {

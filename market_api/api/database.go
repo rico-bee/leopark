@@ -1,9 +1,11 @@
 package api
 
 import (
+	// "encoding/json"
 	crypto "github.com/rico-bee/leopark/crypto"
 	r "gopkg.in/gorethink/gorethink.v4"
 	"log"
+	"strconv"
 )
 
 type DbServer struct {
@@ -33,20 +35,22 @@ func (db *DbServer) latestBlockNum() int64 {
 		log.Println("failed to find latest block number")
 		return 0
 	}
-	var blkNum int64
-	cursor.One(&blkNum)
-	defer cursor.Close()
-	return blkNum
+	var b interface{}
+	cursor.One(&b)
+	//	blk := b.(Block)
+	return 3
 }
 
 func (db *DbServer) FindAssets() ([]Asset, error) {
 	blkNum := db.latestBlockNum()
+	log.Println("latest block:" + strconv.FormatInt(blkNum, 10))
 	cursor, err := r.DB("market").Table("asset").Filter(r.Row.Field("start_block_num").Le(blkNum).And(r.Row.Field("end_block_num").Ge(blkNum))).Without("start_block_num", "end_block_num", "").Run(db.session)
 	assets := []Asset{}
 	err = cursor.All(&assets)
 	if err != nil {
 		return nil, err
 	}
+
 	return assets, nil
 }
 
@@ -89,11 +93,25 @@ func (s *DbServer) ListUsers() ([]crypto.AuthInfo, error) {
 	return authInfoList, nil
 }
 
-func (s *DbServer) CreateUser(authInfo *AuthInfo) error {
+func (s *DbServer) CreateUser(authInfo *crypto.AuthInfo) error {
 	return r.DB("market").Table("auth").Insert(map[string]string{
 		"email":      authInfo.Email,
 		"pwdHash":    authInfo.PwdHash,
 		"privateKey": authInfo.PrivateKey,
 		"publicKey":  authInfo.PublicKey,
 	}).Exec(s.session)
+}
+
+func (s *DbServer) FindAccount(email string) *Account {
+	cursor, err := r.DB("market").Table("account").Filter(map[string]interface{}{"email": email}).Merge(func(account r.Term) interface{} {
+		holdings := r.DB("market").Table("account").GetAll(map[string]interface{}{"account": account.Field("public_key")})
+		return map[string]interface{}{"holdings": holdings}
+	}).Run(s.session)
+	var acc Account
+	err = cursor.One(&acc)
+	if err != nil {
+		log.Println("failed to find account " + err.Error())
+		return nil
+	}
+	return &acc
 }

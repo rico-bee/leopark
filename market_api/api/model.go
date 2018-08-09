@@ -1,10 +1,14 @@
 package api
 
+type Block struct {
+	BlockId  int64 `gorethink:"block_id"`
+	BlockNum int64 `gorethink:"block_num"`
+}
+
 type Account struct {
-	Email      string `gorethink:"email"`
-	PublicKey  string `gorethink:"publicKey"`
-	PwdHash    string `gorethink:"pwdHash,omitempty"`
-	PrivateKey string `gorethink:"privateKey,omitempty"`
+	Email     string     `gorethink:"email"`
+	PublicKey string     `gorethink:"publicKey"`
+	Holdings  []*Holding `gorethink:"holdings"`
 }
 
 type Rule struct {
@@ -16,4 +20,10 @@ type Asset struct {
 	Name        string  `json: "name"`
 	Description string  `json: "description"`
 	Rules       []*Rule `json: "rules"`
+}
+
+type Holding struct {
+	Account  string `gorethink: "account"`
+	Asset    string `gorethink: "asset"`
+	Quantity string `gorethink: "quantity"`
 }

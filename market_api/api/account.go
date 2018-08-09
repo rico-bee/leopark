@@ -95,17 +95,19 @@ func (h *Handler) FindAuthorisation(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 	}
+	var account *AccountResponse
 	if !crypto.CheckPasswordHash(authorise.Password, auth.PwdHash) {
 		log.Println("invalid password....")
 		w.WriteHeader(http.StatusUnauthorized)
-	}
-	tokenString, err := crypto.GenerateAuthToken(auth)
-	if err != nil {
-		log.Println("failed to create auth token:" + err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	account := &AccountResponse{
-		Token: tokenString,
+	} else {
+		tokenString, err := crypto.GenerateAuthToken(auth)
+		if err != nil {
+			log.Println("failed to create auth token:" + err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		account = &AccountResponse{
+			Token: tokenString,
+		}
 	}
 	response, _ := json.Marshal(account)
 	w.WriteHeader(http.StatusOK)

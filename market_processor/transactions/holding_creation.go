@@ -17,13 +17,13 @@ func handleHoldingCreation(createHolding *pb.CreateHolding, header *pb2.Transact
 		accErr := fmt.Sprintf("Account with public key %s doesn't exists", header.SignerPublicKey)
 		return nil, errors.New(accErr)
 	}
-	// asset := state.GetAsset(createHolding.Asset)
-	// if asset == nil {
-	// 	assetErr := fmt.Sprintf("Asset with name %s doesn't exists", createHolding.Asset)
-	// 	return nil, errors.New(assetErr)
-	// }
+	asset := state.GetAsset(createHolding.Asset)
+	if asset == nil {
+		assetErr := fmt.Sprintf("Asset with name %s doesn't exists", createHolding.Asset)
+		return nil, errors.New(assetErr)
+	}
 
 	state.CreateHolding(createHolding.Id, createHolding.Label, createHolding.Description,
 		header.SignerPublicKey, createHolding.Asset, createHolding.Quantity)
-	return state.UpdateHolding(header.SignerPublicKey, createHolding.Quantity)
+	return state.AddHoldingToAccount(header.SignerPublicKey, createHolding.Id)
 }

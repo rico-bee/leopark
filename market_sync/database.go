@@ -32,13 +32,29 @@ func NewDBServer(url string) (*DbServer, error) {
 	if err != nil {
 		log.Println("failed to create market db" + err.Error())
 	}
-	_, err = db.DB("market").TableCreate("blocks").Run(server.session)
+	_, err = db.DB("market").TableCreate("blocks", db.TableCreateOpts{PrimaryKey: "block_num"}).Run(server.session)
 	if err != nil {
 		log.Println("failed to create market.blocks" + err.Error())
 	}
-	_, err = db.DB("market").TableCreate("account").Run(server.session)
+	_, err = db.DB("market").TableCreate("account", db.TableCreateOpts{PrimaryKey: "email"}).Run(server.session)
 	if err != nil {
-		log.Println("failed to create market.blocks" + err.Error())
+		log.Println("failed to create market.account" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("auth", db.TableCreateOpts{PrimaryKey: "email"}).Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.auth" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("asset", db.TableCreateOpts{PrimaryKey: "name"}).Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.asset" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("holding", db.TableCreateOpts{PrimaryKey: "id"}).Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.holding" + err.Error())
+	}
+	_, err = db.DB("market").TableCreate("offer", db.TableCreateOpts{PrimaryKey: "id"}).Run(server.session)
+	if err != nil {
+		log.Println("failed to create market.offer" + err.Error())
 	}
 	return server, nil
 }
@@ -56,7 +72,11 @@ func (s *DbServer) fetch(table, id string) (interface{}, error) {
 }
 
 func (s *DbServer) insert(table string, data interface{}) error {
-	return db.DB(s.Name).Table(table).Insert(data).Exec(s.session)
+	_, err := db.DB(s.Name).Table(table).Insert(data).RunWrite(s.session)
+	if err != nil {
+		log.Println("failed to insert data" + err.Error())
+	}
+	return nil
 }
 
 func (s *DbServer) Table(tableName string) db.Term {
@@ -64,7 +84,6 @@ func (s *DbServer) Table(tableName string) db.Term {
 }
 
 func (s *DbServer) Exec(term db.Term) (*db.Cursor, error) {
-
 	return term.Run(s.session)
 }
 

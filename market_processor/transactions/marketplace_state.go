@@ -238,19 +238,23 @@ func (s *MarketState) AddHoldingToAccount(accountId, holdingId string) ([]string
 	}
 
 	account, err := s.FindAccountFromContainer(accountId, container)
+	// if account == nil {
+	// 	account = &pb.Account{
+	// 		PublicKey:   accountId,
+	// 		Label:       "",
+	// 		Description: "",
+	// 		Holdings:    []string{},
+	// 	}
+	// 	if container.GetEntries() == nil {
+	// 		container.Entries = []*pb.Account{}
+	// 	}
+	// 	container.Entries = append(container.GetEntries(), account)
+	// }
+	log.Println("adding holdings..")
 	if account == nil {
-		account = &pb.Account{
-			PublicKey:   accountId,
-			Label:       "",
-			Description: "",
-			Holdings:    []string{},
-		}
-		if container.GetEntries() == nil {
-			container.Entries = []*pb.Account{}
-		}
-		container.Entries = append(container.GetEntries(), account)
+		log.Println("add holding to account failed: cannot find account:" + accountId)
+		return nil, errors.New("add holding to account failed: cannot find account:" + accountId)
 	}
-
 	account.Holdings = append(account.Holdings, holdingId)
 	newState := make(map[string][]byte)
 	bytes, err := proto.Marshal(container)
@@ -258,6 +262,7 @@ func (s *MarketState) AddHoldingToAccount(accountId, holdingId string) ([]string
 		log.Fatal("corrupted container data")
 	}
 	newState[address] = bytes
+	log.Println("writing holdings into account back to chain")
 	return s.Context.SetState(newState)
 }
 
@@ -285,15 +290,28 @@ func (s *MarketState) SetAccount(accountKey, label, description string, holdings
 	return s.Context.SetState(newState)
 }
 
+func (s *MarketState) fetchState(address string) error {
+	if _, ok := s.State[address]; !ok {
+		state, err := s.Context.GetState([]string{address})
+		if err != nil {
+			log.Println("failed to find state for:" + address + ": " + err.Error())
+			return err
+		}
+		for addr, data := range state {
+			s.State[addr] = data
+		}
+	}
+	return nil
+}
+
 func (s *MarketState) GetAccount(accountKey string) (*pb.Account, error) {
 	address := addresser.MakeAccountAddress(accountKey)
-	state, err := s.Context.GetState([]string{address})
+	err := s.fetchState(address)
 	if err != nil {
-		log.Println("failed to find state for:" + address + ": " + err.Error())
+		log.Println("cannot fetch state data")
+		return nil, err
 	}
-	for addr, data := range state {
-		s.State[addr] = data
-	}
+
 	container, err := s.GetAccountContainer(address)
 	if err != nil {
 		log.Println("cannot find account container, empty container returned: " + err.Error())
@@ -331,6 +349,11 @@ func (s *MarketState) SetAsset(name string, description string, owners []string,
 
 func (s *MarketState) GetAsset(name string) *pb.Asset {
 	address := addresser.MakeAssetAddress(name)
+	err := s.fetchState(address)
+	if err != nil {
+		log.Println("cannot fetch state data")
+		return nil
+	}
 	container, err := s.GetAssetContainer(address)
 	if err != nil {
 		log.Println("cannot get container for : " + name + "due to:" + err.Error())
@@ -399,6 +422,11 @@ func (s *MarketState) CreateHolding(identifier string, label string,
 
 func (s *MarketState) GetHolding(identifier string) (*pb.Holding, error) {
 	address := addresser.MakeHoldingAddress(identifier)
+	err := s.fetchState(address)
+	if err != nil {
+		log.Println("cannot fetch state data")
+		return nil, err
+	}
 	container, err := s.GetHoldingContainer(address)
 	if err != nil {
 		log.Println("failed to find container")
@@ -496,6 +524,11 @@ func (s *MarketState) SetOffer(identifier, label, description,
 
 func (s *MarketState) GetOffer(identifier string) (*pb.Offer, error) {
 	addr := addresser.MakeOfferAddress(identifier)
+	err := s.fetchState(addr)
+	if err != nil {
+		log.Println("cannot fetch state data")
+		return nil, err
+	}
 	container, err := s.GetOfferContainer(addr)
 	if err != nil {
 		log.Println("cannot find offer container")

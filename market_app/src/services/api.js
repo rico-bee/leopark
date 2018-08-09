@@ -49,9 +49,11 @@ const clearAuth = () => {
 // Adds Authorization header and prepends API path to url
 const baseRequest = opts => {
   const Authorization = getAuth()
+  console.log("authorisation header:" + Authorization)
   const authHeader = Authorization ? { Authorization } : {}
   const contentType = {"Content-Type": "application/json"}
   opts.headers = _.assign(opts.headers, contentType)
+  opts.headers = _.assign(opts.headers, authHeader)
   opts.url = API_PATH + opts.url
   return m.request(opts)
 }
@@ -96,7 +98,6 @@ module.exports = {
   getAuth,
   setAuth,
   clearAuth,
-  getPublicKey,
   request,
   get,
   post,

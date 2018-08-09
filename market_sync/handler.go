@@ -106,7 +106,11 @@ func stateChanges(e *events.Event, block *Block, db *DbServer) {
 		}
 	}
 	applyStateChanges(db, states, block.BlockNum)
-	insertBlock(db, block.BlockNum, block.BlockId)
+	log.Println("inserting block when state changes")
+	err = insertBlock(db, block.BlockNum, block.BlockId)
+	if err != nil {
+		log.Println("failed to insert block:" + err.Error())
+	}
 }
 
 func resolveIfForked(db *DbServer, blockNum int64, blockId string) bool {
@@ -139,6 +143,7 @@ func insertBlock(db *DbServer, blockNum int64, blockId string) error {
 		BlockNum: blockNum,
 		BlockId:  blockId,
 	}
+	log.Println("inserting block #" + strconv.FormatInt(blockNum, 10))
 	return db.insert("blocks", newBlock)
 }
 
@@ -199,7 +204,8 @@ func update(db *DbServer, blockNum int64, address string, resource MsgObj) (*r.C
 	log.Println("updating in " + table)
 	_, idxVal := findIndex(space, resource)
 	query := db.Table(table)
-	updateQuery := query.GetAll(idxVal).Filter(r.Row.Field("start_block_num").Eq(math.MaxInt64)).Update(map[string]interface{}{
+	log.Println("end block num:" + strconv.FormatInt(math.MaxInt64, 10))
+	updateQuery := query.GetAll(idxVal).Update(map[string]interface{}{
 		"end_block_num": blockNum,
 	}).Merge(query.Insert(resource).Without("replaced"))
 
