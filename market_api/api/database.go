@@ -44,7 +44,7 @@ func (db *DbServer) latestBlockNum() int64 {
 func (db *DbServer) FindAssets() ([]Asset, error) {
 	blkNum := db.latestBlockNum()
 	log.Println("latest block:" + strconv.FormatInt(blkNum, 10))
-	cursor, err := r.DB("market").Table("asset").Filter(r.Row.Field("start_block_num").Le(blkNum).And(r.Row.Field("end_block_num").Ge(blkNum))).Without("start_block_num", "end_block_num", "").Run(db.session)
+	cursor, err := r.DB("market").Table("asset").Filter(r.Row.Field("start_block_num").Le(blkNum).And(r.Row.Field("end_block_num").Ge(blkNum))).Without("start_block_num", "end_block_num", "delta_id").Run(db.session)
 	assets := []Asset{}
 	err = cursor.All(&assets)
 	if err != nil {
@@ -55,8 +55,7 @@ func (db *DbServer) FindAssets() ([]Asset, error) {
 }
 
 func (db *DbServer) FindAsset(name string) (*Asset, error) {
-	blkNum := db.latestBlockNum()
-	cursor, err := r.DB("market").Table("asset").Filter(r.Row.Field("start_block_num").Le(blkNum).And(r.Row.Field("end_block_num").Ge(blkNum))).Without("start_block_num", "end_block_num", "").Run(db.session)
+	cursor, err := r.DB("market").Table("asset").GetAllByIndex("name", name).Max("start_block_num").Without("start_block_num", "end_block_num", "delta_id").Run(db.session)
 	asset := Asset{}
 	err = cursor.One(&asset)
 	if err != nil {

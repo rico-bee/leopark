@@ -73,7 +73,7 @@ func (server *Server) Start() {
 	m.HandleFunc("/account", server.api.FindAccount).Methods("GET")
 	m.HandleFunc("/asset", server.api.CreateAsset).Methods("POST")
 	m.HandleFunc("/asset/list", server.api.FindAssets).Methods("GET")
-	m.HandleFunc("/asset", server.api.FindAsset).Methods("GET")
+	m.HandleFunc("/asset/{name}", server.api.FindAsset).Methods("GET")
 	m.Use(jwtMiddleware)
 	corsHandler := handlers.CORS(originsOk, headersOk, methodsOk)(r)
 	http.ListenAndServe(":8088", corsHandler)

@@ -81,7 +81,7 @@ const pluckUniq = (items, key) => _.uniq(items.map(item => item[key]))
  */
 const OfferListPage = {
   oninit (vnode) {
-    Promise.all([api.get('offers'), api.get('accounts')])
+    Promise.all([api.get('offers'), api.get('market/accounts')])
       .then(([ offers, accounts ]) => {
         // Pair each holding with its asset type
         const holdingAssets = _.chain(accounts)

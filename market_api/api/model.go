@@ -17,9 +17,10 @@ type Rule struct {
 }
 
 type Asset struct {
-	Name        string  `gorethink:"name" json:"name"`
-	Description string  `gorethink:"description" json:"description"`
-	Rules       []*Rule `gorethink:"rules" json:"rules"`
+	Name        string   `gorethink:"name" json:"name"`
+	Description string   `gorethink:"description" json:"description"`
+	Rules       []*Rule  `gorethink:"rules" json:"rules"`
+	Owners      []string `gorethink:"owners" json:"owners"`
 }
 
 type Holding struct {

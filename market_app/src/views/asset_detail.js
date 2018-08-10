@@ -43,8 +43,9 @@ const offerButton = (name, disabled, key = 'source') => {
 const AssetDetailPage = {
   oninit (vnode) {
     const safeName = window.encodeURI(vnode.attrs.name)
-    Promise.all([acct.getUserAccount(), api.get(`assets/${safeName}`)])
-      .then(([ user, asset ]) => {
+    Promise.all([acct.getUserAccount(), api.get(`market/asset/${safeName}`)])
+      .then(([ user, res ]) => {
+        const asset = res.asset
         vnode.state.asset = asset
 
         if (user) {
@@ -57,10 +58,15 @@ const AssetDetailPage = {
         }
 
         if (asset.owners.length > 0) {
-          return api.get(`accounts/${asset.owners[0]}`)
+          return api.get(`market/account?key=${asset.owners[0]}`)
         }
       })
-      .then(owner => { if (owner) vnode.state.owner = owner })
+      .then(owner => 
+        { 
+          if (owner) 
+            vnode.state.owner = owner 
+        }
+      )
       .catch(api.ignoreError)
   },
 
@@ -82,9 +88,9 @@ const AssetDetailPage = {
         layout.row(layout.labeledField(
           'Administered by',
           m('a', {
-            href: `/accounts/${owner.publicKey}`,
+            href: `/accounts/${owner.public_key}`,
             oncreate: m.route.link
-          }, owner.label || owner.publicKey))),
+          }, owner.email || owner.public_key))),
         layout.row(layout.labeledField(
           'Rules',
           asset.rules.length > 0

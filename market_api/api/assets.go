@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"golang.org/x/net/context"
 	"log"
@@ -28,21 +29,26 @@ func (h *Handler) FindAssets(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	log.Println("found assets....")
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
 func (h *Handler) FindAsset(w http.ResponseWriter, r *http.Request) {
 	_, err := h.CurrentUser(w, r)
-	req := &FindAssetRequest{}
-	bindRequestBody(r, req)
-	asset, err := h.Db.FindAsset(req.Name)
+	params := mux.Vars(r)
+	asset, err := h.Db.FindAsset(params["name"])
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+
+	data, err := json.Marshal(asset)
+	if err != nil {
+		log.Println("failed to marshal data:" + err.Error())
+	}
+	log.Println("asset:" + string(data))
 	res := &FindAssetResponse{Asset: asset}
-	data, err := json.Marshal(res)
+	data, err = json.Marshal(res)
 	if err != nil {
 		log.Println("failed to serialise assets:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

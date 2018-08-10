@@ -1,15 +1,15 @@
 package api
 
 type FindAssetRequest struct {
-	Name string `json: "name"`
+	Name string `json:"name"`
 }
 
 type FindAssetResponse struct {
-	Asset *Asset `json: "asset"`
+	Asset *Asset `json:"asset"`
 }
 
 type FindAccountRequest struct {
-	Email string `json:"public_key"`
+	PublicKey string `json:"public_key"`
 }
 
 type FindAccountResponse struct {

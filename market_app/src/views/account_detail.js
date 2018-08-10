@@ -122,10 +122,7 @@ const AccountDetailPage = {
 
     Promise.resolve()
       .then(() => {
-        if (vnode.attrs.publicKey === api.getPublicKey()) {
-          return acct.getUserAccount()
-        }
-        return api.get(`accounts/${vnode.attrs.publicKey}`)
+        return api.get(`market/account?key=${vnode.attrs.publicKey}`)
       })
       .then(account => {
         vnode.state.account = account
@@ -135,7 +132,7 @@ const AccountDetailPage = {
   },
 
   view (vnode) {
-    const publicKey = _.get(vnode.state, 'account.publicKey', '')
+    const publicKey = _.get(vnode.state, 'account.public_key', '')
     const holdings = _.get(vnode.state, 'account.holdings', [])
 
     const profileContent = layout.row([

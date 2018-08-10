@@ -91,6 +91,7 @@ func mapAsset(blockNum int64, asset *market.Asset) *Asset {
 		Name:        asset.Name,
 		Description: asset.Description,
 		Rules:       mapAssetRule(asset.Rules),
+		Owners:      asset.Owners,
 		BlockRange:  BlockRange{StartBlockNum: blockNum, EndBlockNum: math.MaxInt64},
 	}
 }

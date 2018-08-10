@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	// "github.com/gorilla/mux"
 	crypto "github.com/rico-bee/leopark/crypto"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"golang.org/x/net/context"
@@ -16,8 +17,13 @@ func (h *Handler) FindAccount(w http.ResponseWriter, r *http.Request) {
 		log.Println("failed to authorise:" + err.Error())
 		return
 	}
+	q := r.URL.Query()
+	key := q.Get("key")
+	if key == "" {
+		key = auth.PublicKey
+	}
 
-	account := h.Db.FindAccount(auth.PublicKey)
+	account := h.Db.FindAccount(key)
 
 	if err != nil || account == nil {
 		log.Println("failed to find account:")

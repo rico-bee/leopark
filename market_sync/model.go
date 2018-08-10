@@ -25,9 +25,10 @@ type Rule struct {
 
 type Asset struct {
 	BlockRange
-	Name        string  `json: "name"`
-	Description string  `json: "description"`
-	Rules       []*Rule `json: "rules"`
+	Name        string   `gorethink:"name" json:"name"`
+	Description string   `gorethink:"description" json:"description"`
+	Rules       []*Rule  `gorethink:"rules" json:"rules"`
+	Owners      []string `gorethink:"owners" json:"owners"`
 }
 
 type Holding struct {
