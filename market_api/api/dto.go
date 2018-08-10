@@ -9,12 +9,13 @@ type FindAssetResponse struct {
 }
 
 type FindAccountRequest struct {
-	Email string `json:"email"`
+	Email string `json:"public_key"`
 }
 
 type FindAccountResponse struct {
-	Email     string `json:"email"`
-	PublicKey string `json:"public_key"`
+	Email     string     `json:"email"`
+	PublicKey string     `json:"public_key"`
+	Holdings  []*Holding `json:"holdings"`
 }
 
 type CreateAccountRequest struct {

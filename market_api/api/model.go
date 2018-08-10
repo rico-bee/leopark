@@ -6,24 +6,24 @@ type Block struct {
 }
 
 type Account struct {
-	Email     string     `gorethink:"email"`
-	PublicKey string     `gorethink:"publicKey"`
-	Holdings  []*Holding `gorethink:"holdings"`
+	Email     string     `gorethink:"email" json:"email"`
+	PublicKey string     `gorethink:"publicKey" json:"publicKey"`
+	Holdings  []*Holding `gorethink:"holdings" json:"holdings"`
 }
 
 type Rule struct {
-	Type  int32  `json:"type"`
-	Value string `json:"type"`
+	Type  int32  `gorethink:"type" json:"type"`
+	Value string `gorethink:"value" json:"value"`
 }
 
 type Asset struct {
-	Name        string  `json: "name"`
-	Description string  `json: "description"`
-	Rules       []*Rule `json: "rules"`
+	Name        string  `gorethink:"name" json:"name"`
+	Description string  `gorethink:"description" json:"description"`
+	Rules       []*Rule `gorethink:"rules" json:"rules"`
 }
 
 type Holding struct {
-	Account  string `gorethink: "account"`
-	Asset    string `gorethink: "asset"`
-	Quantity string `gorethink: "quantity"`
+	Account  string `gorethink:"account" json:"account"`
+	Asset    string `gorethink:"asset" json:"asset"`
+	Quantity string `gorethink:"quantity" json:"quantity"`
 }

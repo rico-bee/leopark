@@ -11,14 +11,18 @@ import (
 )
 
 func (h *Handler) FindAccount(w http.ResponseWriter, r *http.Request) {
-	req := &FindAccountRequest{}
-	bindRequestBody(r, req)
-
-	account, err := h.Db.FindUser(req.Email)
-
+	auth, err := h.CurrentUser(w, r)
 	if err != nil {
-		log.Println("failed to find assets:" + err.Error())
+		log.Println("failed to authorise:" + err.Error())
+		return
+	}
+
+	account := h.Db.FindAccount(auth.PublicKey)
+
+	if err != nil || account == nil {
+		log.Println("failed to find account:")
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
@@ -26,11 +30,14 @@ func (h *Handler) FindAccount(w http.ResponseWriter, r *http.Request) {
 	res := &FindAccountResponse{
 		Email:     account.Email,
 		PublicKey: account.PublicKey,
+		Holdings:  account.Holdings,
 	}
 	data, err := json.Marshal(res)
+	log.Println("account: " + string(data))
 	if err != nil {
 		log.Println("failed to serialise assets:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.Write(data)
 }

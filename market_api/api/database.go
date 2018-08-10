@@ -102,11 +102,27 @@ func (s *DbServer) CreateUser(authInfo *crypto.AuthInfo) error {
 	}).Exec(s.session)
 }
 
-func (s *DbServer) FindAccount(email string) *Account {
-	cursor, err := r.DB("market").Table("account").Filter(map[string]interface{}{"email": email}).Merge(func(account r.Term) interface{} {
-		holdings := r.DB("market").Table("account").GetAll(map[string]interface{}{"account": account.Field("public_key")})
-		return map[string]interface{}{"holdings": holdings}
-	}).Run(s.session)
+func (s *DbServer) FetchHoldings(ids r.Term) r.Term {
+	table := r.DB("market").Table("holding")
+	blkNum := s.latestBlockNum()
+	return table.GetAllByIndex("id", ids).
+		Filter(func(row r.Term) r.Term {
+			return row.Field("start_block_num").Le(blkNum).And(row.Field("end_block_num").Ge(blkNum))
+		}).
+		Without("start_block_num", "end_block_num", "delta_id", "account").CoerceTo("array")
+}
+
+func (s *DbServer) FindAccount(publicKey string) *Account {
+	log.Println("")
+	cursor, err := r.DB("market").Table("account").GetAllByIndex("public_key", publicKey).
+		Max("start_block_num").
+		Merge(func(account r.Term) interface{} {
+			return map[string]interface{}{"holdings": s.FetchHoldings(r.Args(account.Field("holdings")))}
+		}).Run(s.session)
+	if err != nil {
+		log.Println("failed to query:" + err.Error())
+	}
+
 	var acc Account
 	err = cursor.One(&acc)
 	if err != nil {

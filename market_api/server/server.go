@@ -69,10 +69,11 @@ func (server *Server) Start() {
 	// no jwt check on register
 	r.HandleFunc("/register", server.api.CreateAccount).Methods("POST")
 	r.HandleFunc("/authorise", server.api.FindAuthorisation).Methods("POST")
-	r.HandleFunc("/account", server.api.FindAccount).Methods("GET")
-	r.HandleFunc("/asset", server.api.CreateAsset).Methods("POST")
-	r.HandleFunc("/assets", server.api.FindAssets).Methods("GET")
-	r.HandleFunc("/asset", server.api.FindAsset).Methods("GET")
+
+	m.HandleFunc("/account", server.api.FindAccount).Methods("GET")
+	m.HandleFunc("/asset", server.api.CreateAsset).Methods("POST")
+	m.HandleFunc("/assets", server.api.FindAssets).Methods("GET")
+	m.HandleFunc("/asset", server.api.FindAsset).Methods("GET")
 	m.Use(jwtMiddleware)
 	corsHandler := handlers.CORS(originsOk, headersOk, methodsOk)(r)
 	http.ListenAndServe(":8088", corsHandler)

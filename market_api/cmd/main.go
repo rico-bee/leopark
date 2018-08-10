@@ -2,7 +2,9 @@ package main
 
 import (
 	uuid "github.com/hashicorp/go-uuid"
+	crypto "github.com/rico-bee/leopark/crypto"
 	mktpb "github.com/rico-bee/leopark/market"
+	api "github.com/rico-bee/leopark/market_api/api"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -104,6 +106,11 @@ func main() {
 	defer conn.Close()
 	c := pb.NewMarketClient(conn)
 
+	db, err := api.NewDBServer("localhost:28015")
+	if err != nil {
+		log.Fatal("failed to connect to DB")
+	}
+
 	for _, p := range mktData.Participants {
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -116,6 +123,22 @@ func main() {
 		res, err := c.DoCreateAccount(ctx, req)
 		if err != nil {
 			log.Fatal("rpc failed:" + err.Error())
+		}
+
+		hashPwd, err := crypto.HashPassword(p.Password)
+		if err != nil {
+			log.Println("cannot hash password:" + err.Error())
+		}
+		auth := &crypto.AuthInfo{
+			PublicKey:  res.PublicKey,
+			PrivateKey: res.PrivateKey,
+			PwdHash:    hashPwd,
+			Email:      p.Email,
+		}
+
+		err = db.CreateUser(auth)
+		if err != nil {
+			log.Println("failed to create auth for user:" + auth.Email)
 		}
 
 		for _, a := range p.Assets {

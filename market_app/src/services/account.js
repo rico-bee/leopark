@@ -25,7 +25,7 @@ let account = null
 const getUserAccount = () => {
   return Promise.resolve()
     .then(() => {
-      return api.get(`account`)
+      return api.get(`market/account`)
     })
     .then(acct => {
       account = acct

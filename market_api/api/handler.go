@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	crypto "github.com/rico-bee/leopark/crypto"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"golang.org/x/net/context"
 	"net/http"
@@ -78,12 +79,18 @@ func checkJwt(r *http.Request) (string, error) {
 	return tokenStr, nil
 }
 
-func (h *Handler) CurrentUser(w http.ResponseWriter, r *http.Request) (string, error) {
-	privateKey := r.Header.Get("privateKey")
-	if privateKey == "" {
+func (h *Handler) CurrentUser(w http.ResponseWriter, r *http.Request) (*crypto.AuthInfo, error) {
+	email := r.Header.Get("email")
+	if email == "" {
 		unauthorised(w)
+		return nil, errors.New("unauthorised access")
 	}
-	return privateKey, nil
+
+	auth, err := h.Db.FindUser(email)
+	if err != nil {
+		return nil, err
+	}
+	return auth, nil
 }
 
 func unauthorised(w http.ResponseWriter) {

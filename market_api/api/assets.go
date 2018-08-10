@@ -11,20 +11,25 @@ import (
 
 func (h *Handler) FindAssets(w http.ResponseWriter, r *http.Request) {
 	_, err := h.CurrentUser(w, r)
+	if err != nil {
+		log.Println("failed to authenticate:" + err.Error())
+		return
+	}
 	log.Println("finding assets....")
 	assets, err := h.Db.FindAssets()
 	if err != nil {
 		log.Println("failed to find assets:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		w.WriteHeader(http.StatusOK)
+		return
 	}
 	data, err := json.Marshal(assets)
 	if err != nil {
 		log.Println("failed to serialise assets:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	log.Println("found assets....")
+	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
@@ -57,7 +62,7 @@ func mapRules(rules []*Rule) []*pb.AssetRule {
 }
 
 func (h *Handler) CreateAsset(w http.ResponseWriter, r *http.Request) {
-	privateKey, err := h.CurrentUser(w, r)
+	auth, err := h.CurrentUser(w, r)
 	createAsset := &CreateAssetRequest{}
 	bindRequestBody(r, createAsset)
 	// Contact the server and print out its response.
@@ -68,13 +73,14 @@ func (h *Handler) CreateAsset(w http.ResponseWriter, r *http.Request) {
 		Name:        createAsset.Name,
 		Description: createAsset.Description,
 		Rules:       mapRules(createAsset.Rules),
-		PrivateKey:  privateKey,
+		PrivateKey:  auth.PrivateKey,
 	}
 	res, err := h.RpcClient.DoCreateAsset(ctx, createAssetReq)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		log.Println("failed to make rpc call:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
