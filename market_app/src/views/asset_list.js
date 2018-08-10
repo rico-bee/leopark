@@ -64,7 +64,7 @@ const assetRowMapper = account => asset => {
  */
 const AssetListPage = {
   oninit (vnode) {
-    Promise.all([ acct.getUserAccount(), api.get(`market/assets`) ])
+    Promise.all([ acct.getUserAccount(), api.get(`market/asset/list`) ])
       .then(([ account, assets ]) => {
         vnode.state.assets = assets
 
