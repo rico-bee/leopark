@@ -155,7 +155,7 @@ const AcceptOfferModal = {
 
         return Promise.all([
           acct.getUserAccount(),
-          api.get(`accounts/${offer.owners[0]}`)
+          api.get(`market/account/${offer.owners[0]}`)
         ])
       })
       .then(([ user, owner ]) => {
@@ -180,7 +180,7 @@ const AcceptOfferModal = {
         // Set initial count/quantity values to the minimum exchange
         countSetter(vnode.state)(1)
 
-        return Promise.all([ owner, api.get(`assets/${inAsset}`) ])
+        return Promise.all([ owner, api.get(`market/asset/${inAsset}`) ])
       })
       .then(([ owner, inAsset ]) => {
         const allInfinite = inAsset.rules.find(({ type }) => {
@@ -189,7 +189,7 @@ const AcceptOfferModal = {
         const ownerInfinite = inAsset.rules.find(({ type }) => {
           return type === 'OWNER_HOLDINGS_INFINITE'
         })
-        const isOwner = owner.publicKey === inAsset.owners[0].publicKey
+        const isOwner = owner.public_key === inAsset.owners[0].public_key
 
         vnode.state.inMax = allInfinite || (ownerInfinite && isOwner)
           ? Number.MAX_SAFE_INTEGER

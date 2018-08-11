@@ -140,3 +140,91 @@ func (h *Handler) CreateOffer(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte(res.Message))
 }
+
+func mapOfferParticipant(srcId, targetId string, source, target *Holding) *pb.OfferParticipant {
+	return &pb.OfferParticipant{
+		SrcHolding:    srcId,
+		TargetHolding: targetId,
+		SrcAsset:      source.Asset,
+		TargetAsset:   target.Asset,
+	}
+}
+
+func (h *Handler) AcceptOffer(w http.ResponseWriter, r *http.Request) {
+	auth, err := h.CurrentUser(w, r)
+	params := mux.Vars(r)
+	id, ok := params["id"]
+	if !ok {
+		log.Println("no id param specified")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	acceptOffer := &AcceptOfferRequest{}
+	bindRequestBody(r, acceptOffer)
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
+	defer cancel()
+
+	offer, err := h.Db.FindOffer(id)
+	if err != nil {
+		log.Println("failed to find offer from request " + id)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	ids := []string{acceptOffer.Source, acceptOffer.Target}
+
+	holdings := h.Db.FetchHoldingsByIds(ids)
+	if holdings == nil {
+		log.Println("failed to find holdings from request")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	acceptOfferReq := &pb.AcceptOfferRequest{
+		Identifier: id,
+		Sender:     mapOfferParticipant(offer.Source, offer.Target, holdings[acceptOffer.Source], holdings[acceptOffer.Target]),
+		Receiver:   mapOfferParticipant(acceptOffer.Source, acceptOffer.Target, holdings[acceptOffer.Source], holdings[acceptOffer.Target]),
+		PrivateKey: auth.PrivateKey,
+	}
+	res, err := h.RpcClient.DoAcceptOffer(ctx, acceptOfferReq)
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		log.Println("failed to make rpc call:" + err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+	w.Write([]byte(res.Message))
+}
+
+func (h *Handler) CloseOffer(w http.ResponseWriter, r *http.Request) {
+	auth, _ := h.CurrentUser(w, r)
+	params := mux.Vars(r)
+	id, ok := params["id"]
+	if !ok {
+		log.Println("no id param specified")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
+	defer cancel()
+
+	closeOffer := &pb.CloseOfferRequest{
+		Id:         id,
+		PrivateKey: auth.PrivateKey,
+	}
+
+	res, err := h.RpcClient.DoCloseOffer(ctx, closeOffer)
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		log.Println("failed to make rpc call:" + err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+	w.Write([]byte(res.Message))
+}

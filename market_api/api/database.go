@@ -101,6 +101,27 @@ func (s *DbServer) CreateUser(authInfo *crypto.AuthInfo) error {
 	}).Exec(s.session)
 }
 
+func (s *DbServer) FetchHoldingsByIds(ids []string) map[string]*Holding {
+	query := s.FetchHoldings(r.Args(ids))
+	cursor, err := query.Run(s.session)
+	if err != nil {
+		log.Println("cannot find holdings by ids:" + err.Error())
+		return nil
+	}
+	var holdings []*Holding
+	err = cursor.All(&holdings)
+	if err != nil {
+		log.Println("failed to parse holdings from cursor" + err.Error())
+		return nil
+	}
+
+	ret := make(map[string]*Holding)
+	for _, h := range holdings {
+		ret[h.Id] = h
+	}
+	return ret
+}
+
 func (s *DbServer) FetchHoldings(ids r.Term) r.Term {
 	table := r.DB("market").Table("holding")
 	blkNum := s.latestBlockNum()

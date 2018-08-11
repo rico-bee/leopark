@@ -24,6 +24,7 @@ type Asset struct {
 }
 
 type Holding struct {
+	Id       string `gorethink:"id" json:"id,omitempty"`
 	Account  string `gorethink:"account" json:"account"`
 	Asset    string `gorethink:"asset" json:"asset"`
 	Quantity string `gorethink:"quantity" json:"quantity"`

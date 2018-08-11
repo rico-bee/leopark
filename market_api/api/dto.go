@@ -63,3 +63,19 @@ type CreateOfferRequest struct {
 	TargetQuantity int64   `json:"target_quantity"`
 	Rules          []*Rule `json:"rules"`
 }
+
+type AcceptOfferRequest struct {
+	ID     string `json:"id"`
+	Count  int64  `json:"count"`
+	Source string `json:"source"`
+	Target string `json:"target"`
+}
+
+type AcceptOfferResponse struct{}
+
+type CreateHoldingRequest struct {
+	Label       string `json:"name"`
+	Description string `json:"description"`
+	Asset       string `json:"asset"`
+	Quantity    int64  `json:"quantity"`
+}

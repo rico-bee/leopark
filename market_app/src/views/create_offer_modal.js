@@ -153,18 +153,19 @@ const submitter = (state, onDone) => () => {
     .then(() => {
       if (state.hasNewHolding) {
         const holdingKeys = ['label', 'description', 'asset']
-        return api.post('holdings', _.pick(state.holding, holdingKeys))
+        return api.post('market/holding', _.pick(state.holding, holdingKeys))
       }
     })
     .then(holding => {
+
       const offerKeys = [
-        'label', 'description', 'source', 'sourceQuantity',
-        'target', 'targetQuantity'
+        'label', 'description', 'source', 'src_quantity',
+        'target', 'target_quantity'
       ]
       const offer = _.pick(state.offer, offerKeys)
       if (holding) offer.target = holding.id
       offer.rules = getRules(state)
-      return api.post('offers', offer)
+      return api.post('market/offer', offer)
     })
     .then(onDone)
     .then(() => m.route.set('/offers'))
@@ -182,7 +183,7 @@ const CreateOfferModal = {
 
     return Promise.all([
       acct.getUserAccount(),
-      vnode.attrs.target ? null : api.get('assets')
+      vnode.attrs.target ? null : api.get('market/asset')
     ])
       .then(([ account, assets ]) => {
         if (!account) return vnode.attrs.cancelFn()

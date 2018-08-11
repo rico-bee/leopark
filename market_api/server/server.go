@@ -64,7 +64,7 @@ func (server *Server) Start() {
 	// !!! WARN: we have to explicitly whitelist all required headers in X-Requested-With to allow the pre-flight request pass
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "PATCH", "OPTIONS"})
 
 	// no jwt check on register
 	r.HandleFunc("/register", server.api.CreateAccount).Methods("POST")
@@ -72,8 +72,14 @@ func (server *Server) Start() {
 
 	m.HandleFunc("/account", server.api.FindAccount).Methods("GET")
 	m.HandleFunc("/asset", server.api.CreateAsset).Methods("POST")
-	m.HandleFunc("/asset/list", server.api.FindAssets).Methods("GET")
+	m.HandleFunc("/asset", server.api.FindAssets).Methods("GET")
 	m.HandleFunc("/asset/{name}", server.api.FindAsset).Methods("GET")
+	m.HandleFunc("/offer", server.api.FindOffers).Methods("GET")
+	m.HandleFunc("/offer", server.api.CreateOffer).Methods("POST")
+	m.HandleFunc("/offer/{id}", server.api.FindOffer).Methods("GET")
+	m.HandleFunc("/offer/{id}/accept", server.api.AcceptOffer).Methods("PATCH")
+	m.HandleFunc("/offer/{id}/close", server.api.CloseOffer).Methods("PATCH")
+	m.HandleFunc("/holding", server.api.CreateHolding).Methods("POST")
 	m.Use(jwtMiddleware)
 	corsHandler := handlers.CORS(originsOk, headersOk, methodsOk)(r)
 	http.ListenAndServe(":8088", corsHandler)
