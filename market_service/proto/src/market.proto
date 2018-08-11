@@ -62,12 +62,11 @@ message CreateAssetResponse {
 
 // The request message containing the user's name.
 message CreateHoldingRequest {
-  string identifier = 1;
-  string label = 2;
-  string descrption = 3;
-  string asset = 4;
-  int64 quantity = 5;
-  string privateKey = 6;
+  string label = 1;
+  string descrption = 2;
+  string asset = 3;
+  int64 quantity = 4;
+  string privateKey = 5;
 }
 
 // The response message containing the greetings
@@ -89,13 +88,12 @@ message OfferParticipant {
 }
 
 message CreateOfferRequest {
-  string identifier = 1;
-  string label = 2;
-  string description = 3;
-  MarketplaceHolding source = 4;
-  MarketplaceHolding target = 5;
-  repeated AssetRule rules = 6;
-  string privateKey = 7;
+  string label = 1;
+  string description = 2;
+  MarketplaceHolding source = 3;
+  MarketplaceHolding target = 4;
+  repeated AssetRule rules = 5;
+  string privateKey = 6;
 }
 
 message CreateOfferResponse {

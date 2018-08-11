@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"encoding/hex"
+	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	mktpb "github.com/rico-bee/leopark/market"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
@@ -92,8 +93,9 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 	}
 	privateKey := signing.NewSecp256k1PrivateKey(pk)
 	signer := signing.NewCryptoFactory(s.ctx).NewSigner(privateKey)
+	id, _ := uuid.GenerateUUID()
 	batches, signature := transaction.CreateHolding(signer, s.signer,
-		req.Identifier,
+		id,
 		req.Label, req.Descrption, req.Asset, req.Quantity)
 
 	if signature == "" {
@@ -124,7 +126,8 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 	if err != nil {
 		return nil, err
 	}
-	batches, signature := transaction.CreateOffer(signer, s.signer, req.Identifier, req.Label, req.Description,
+	id, _ := uuid.GenerateUUID()
+	batches, signature := transaction.CreateOffer(signer, s.signer, id, req.Label, req.Description,
 		MapHolding(req.Source), MapHolding(req.Target), mktRules)
 	if signature == "" {
 		log.Fatal("Failed to create account")

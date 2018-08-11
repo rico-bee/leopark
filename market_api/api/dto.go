@@ -34,7 +34,32 @@ type AccountResponse struct {
 }
 
 type CreateAssetRequest struct {
-	Name        string  `json: "name"`
-	Description string  `json: "description"`
-	Rules       []*Rule `json: "rules"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Rules       []*Rule `json:"rules"`
+}
+
+type FindOffersRequest struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
+	Status string `json:"status"`
+}
+
+type FindOffersResponse struct {
+	Offers []*Offer `json:"offers"`
+}
+
+type FindOfferResponse struct {
+	Offer *Offer `json:"offer"`
+}
+
+type CreateOfferRequest struct {
+	Asset          string  `json:"asset"`
+	Label          string  `json:"label"`
+	Description    string  `json:"description"`
+	Source         string  `json:"source"`
+	SrcQuantity    int64   `json:"src_quantity"`
+	Target         string  `json:"target"`
+	TargetQuantity int64   `json:"target_quantity"`
+	Rules          []*Rule `json:"rules"`
 }

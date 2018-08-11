@@ -93,6 +93,12 @@
 			"revisionTime": "2016-01-25T11:53:50Z"
 		},
 		{
+			"checksumSHA1": "iv401gfNSxtEag0DUV39G7Q1fOo=",
+			"path": "github.com/hashicorp/go-uuid",
+			"revision": "27454136f0364f2d44b1276c552d69105cf8c498",
+			"revisionTime": "2018-02-28T14:58:32Z"
+		},
+		{
 			"checksumSHA1": "rL58Tgsl27JWblBoLAdcYJm1Gwg=",
 			"path": "github.com/hyperledger/sawtooth-sdk-go/logging",
 			"revision": "c151309cd1349584f624f9320b1572f0dffe8547",

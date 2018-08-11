@@ -16,7 +16,6 @@ func (h *Handler) FindAssets(w http.ResponseWriter, r *http.Request) {
 		log.Println("failed to authenticate:" + err.Error())
 		return
 	}
-	log.Println("finding assets....")
 	assets, err := h.Db.FindAssets()
 	if err != nil {
 		log.Println("failed to find assets:" + err.Error())

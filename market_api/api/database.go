@@ -106,7 +106,7 @@ func (s *DbServer) FetchHoldings(ids r.Term) r.Term {
 	blkNum := s.latestBlockNum()
 	return table.GetAllByIndex("id", ids).
 		Filter(func(row r.Term) r.Term {
-			return row.Field("start_block_num").Le(blkNum).And(row.Field("end_block_num").Ge(blkNum))
+			return row.Field("start_block_num").Le(blkNum).And(row.Field("end_block_num").Gt(blkNum))
 		}).
 		Without("start_block_num", "end_block_num", "delta_id", "account").CoerceTo("array")
 }
@@ -129,4 +129,36 @@ func (s *DbServer) FindAccount(publicKey string) *Account {
 		return nil
 	}
 	return &acc
+}
+
+func (s *DbServer) FetchOffers(queryParams map[string]interface{}) ([]*Offer, error) {
+	table := r.DB("market").Table("offer")
+	blkNum := s.latestBlockNum()
+	cursor, err := table.Filter(queryParams).
+		Filter(func(row r.Term) r.Term {
+			return row.Field("start_block_num").Le(blkNum).And(row.Field("end_block_num").Gt(blkNum))
+		}).
+		Without("start_block_num", "end_block_num", "delta_id", "account").CoerceTo("array").Run(s.session)
+	if err != nil {
+		log.Println("cannot get offers from db:" + err.Error())
+		return nil, err
+	}
+	offers := []*Offer{}
+	err = cursor.All(&offers)
+	if err != nil {
+		log.Println("cannot get offers from cursor:" + err.Error())
+		return nil, err
+	}
+	return offers, nil
+}
+
+func (db *DbServer) FindOffer(id string) (*Offer, error) {
+	cursor, err := r.DB("market").Table("offer").GetAllByIndex("id", id).Max("start_block_num").Without("start_block_num", "end_block_num", "delta_id").Run(db.session)
+	offer := Offer{}
+	err = cursor.One(&offer)
+	if err != nil {
+		log.Println("cannot fetch offer")
+		return nil, err
+	}
+	return &offer, nil
 }

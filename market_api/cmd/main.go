@@ -1,7 +1,7 @@
 package main
 
 import (
-	uuid "github.com/hashicorp/go-uuid"
+	// uuid "github.com/hashicorp/go-uuid"
 	crypto "github.com/rico-bee/leopark/crypto"
 	mktpb "github.com/rico-bee/leopark/market"
 	api "github.com/rico-bee/leopark/market_api/api"
@@ -155,12 +155,10 @@ func main() {
 		}
 
 		for _, h := range p.Holdings {
-			id, err := uuid.GenerateUUID()
 			if err != nil {
 				log.Fatal("failed toget uuid:" + err.Error())
 			}
 			hReq := &pb.CreateHoldingRequest{
-				Identifier: id,
 				Label:      h.Label,
 				Descrption: h.Description,
 				Asset:      h.Asset,
