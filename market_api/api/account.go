@@ -32,7 +32,7 @@ func (h *Handler) FindAccount(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-
+	log.Println("public key :" + account.PublicKey)
 	res := &FindAccountResponse{
 		Email:     account.Email,
 		PublicKey: account.PublicKey,

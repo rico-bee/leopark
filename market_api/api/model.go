@@ -7,7 +7,7 @@ type Block struct {
 
 type Account struct {
 	Email     string     `gorethink:"email" json:"email"`
-	PublicKey string     `gorethink:"publicKey" json:"publicKey"`
+	PublicKey string     `gorethink:"public_key" json:"public_key"`
 	Holdings  []*Holding `gorethink:"holdings" json:"holdings"`
 }
 

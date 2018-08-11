@@ -144,7 +144,7 @@ const AccountDetailPage = {
       layout.title(_.get(vnode.state, 'account.label', '')),
       layout.description(_.get(vnode.state, 'account.description', '')),
       m('.container',
-        publicKey === api.getPublicKey() ? profileContent : null,
+        profileContent,
         layout.row(staticField('Public Key', publicKey)),
         layout.row(staticField(
           'Holdings',
