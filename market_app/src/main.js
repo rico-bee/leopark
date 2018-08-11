@@ -23,6 +23,7 @@ require('../styles/main.scss')
 const m = require('mithril')
 
 const api = require('./services/api')
+const acct = require('./services/account')
 const navigation = require('./components/navigation')
 
 const AccountDetailPage = require('./views/account_detail')
@@ -103,9 +104,11 @@ const logout = () => {
  * Redirects to user's personal account page if logged in.
  */
 const userAccount = () => {
-  const publicKey = api.getPublicKey()
-  if (publicKey) m.route.set(`/accounts/${publicKey}`)
-  else m.route.set('/')
+  acct.getUserAccount().then(acc => m.route.set(`/accounts/${acc.public_key}`) ).catch(err => {
+    console.log("cannot find account profile")
+    m.route.set('/')
+  })
+  
 }
 
 /**
