@@ -11,6 +11,7 @@ import (
 	addresser "github.com/rico-bee/leopark/address"
 	pb "github.com/rico-bee/leopark/market"
 	"log"
+	// "strings"
 )
 
 // TxHeader : Transaction Header in
@@ -169,6 +170,8 @@ func CreateOffer(txnKey, batchKey *Signer, identifier, label, description string
 	targetHoldingAdd := addresser.MakeHoldingAddress(target.HoldingId)
 	targetAssetAdd := addresser.MakeAssetAddress(source.Asset)
 	inputs := []string{accountAdd, srcAssetAdd, offerAdd, srcHoldingAdd}
+	log.Println("creating offer with src asset:" + source.Asset + "-" + srcAssetAdd)
+
 	if target != nil {
 		inputs = append(inputs, targetHoldingAdd)
 		inputs = append(inputs, targetAssetAdd)
@@ -179,6 +182,7 @@ func CreateOffer(txnKey, batchKey *Signer, identifier, label, description string
 		inputs = append(inputs, addresser.MakeAssetAddress(target.Asset))
 	}
 
+	log.Println("creating offer:" + identifier)
 	createOffer := &pb.CreateOffer{
 		Id:             identifier,
 		Label:          label,

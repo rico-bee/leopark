@@ -12,7 +12,7 @@ type Account struct {
 }
 
 type Rule struct {
-	Type  int32  `gorethink:"type" json:"type"`
+	Type  string `gorethink:"type" json:"type"`
 	Value string `gorethink:"value" json:"value"`
 }
 

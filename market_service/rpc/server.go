@@ -38,7 +38,6 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 		log.Println("failed to send batch request")
 	}
 	log.Println("creating account for : " + in.Email)
-	log.Println("checking batch for : " + signature)
 	batchIds := []string{signature}
 	time.Sleep(5 * time.Second)
 	committed, err := s.validator.CheckBatchStatus(batchIds)
@@ -75,7 +74,6 @@ func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
-	log.Println("checking batch for : " + signature)
 	batchIds := []string{signature}
 	time.Sleep(5 * time.Second)
 	committed, err := s.validator.CheckBatchStatus(batchIds)
@@ -105,6 +103,7 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
+	log.Println("holding created: " + req.Asset)
 	batchIds := []string{signature}
 	time.Sleep(5 * time.Second)
 	committed, err := s.validator.CheckBatchStatus(batchIds)
@@ -127,6 +126,7 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 		return nil, err
 	}
 	id, _ := uuid.GenerateUUID()
+	log.Println("we creating offer with src asset: " + req.Source.Asset)
 	batches, signature := transaction.CreateOffer(signer, s.signer, id, req.Label, req.Description,
 		MapHolding(req.Source), MapHolding(req.Target), mktRules)
 	if signature == "" {
@@ -136,7 +136,7 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
-
+	time.Sleep(5 * time.Second)
 	batchIds := []string{signature}
 	committed, err := s.validator.CheckBatchStatus(batchIds)
 	if !committed {

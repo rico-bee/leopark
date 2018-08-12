@@ -137,10 +137,10 @@ const getRules = state => {
 // Returns true or false depending on whether or not the form is valid
 const isFormValid = state => {
   if (!state.offer.source) return false
-  if (!state.offer.sourceQuantity) return false
+  if (!state.offer.src_quantity) return false
   if (state.noTarget) return true
 
-  if (!state.offer.targetQuantity) return false
+  if (!state.offer.target_quantity) return false
   if (state.hasNewHolding && !state.holding.asset) return false
   if (!state.hasNewHolding && !state.offer.target) return false
 
@@ -164,7 +164,9 @@ const submitter = (state, onDone) => () => {
       ]
       const offer = _.pick(state.offer, offerKeys)
       if (holding) offer.target = holding.id
+      console.log("source:" + state.sourceLabel)
       offer.rules = getRules(state)
+      offer.asset = state.sourceLabel
       return api.post('market/offer', offer)
     })
     .then(onDone)
@@ -241,7 +243,7 @@ const CreateOfferModal = {
               getLabel(vnode.state.sourceLabel, 'Offered'),
               sourceOptions,
               'success'),
-            body: forms.field(intSetter('offer.sourceQuantity'), {
+            body: forms.field(intSetter('offer.src_quantity'), {
               type: 'number'
             })
           }, {
@@ -249,7 +251,7 @@ const CreateOfferModal = {
               getLabel(vnode.state.targetLabel, 'Requested'),
               targetOptions,
               'success'),
-            body: forms.field(intSetter('offer.targetQuantity'), {
+            body: forms.field(intSetter('offer.target_quantity'), {
               type: 'number',
               required: false,
               disabled: vnode.state.noTarget

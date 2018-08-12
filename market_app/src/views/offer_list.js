@@ -81,11 +81,10 @@ const pluckUniq = (items, key) => _.uniq(items.map(item => item[key]))
  */
 const OfferListPage = {
   oninit (vnode) {
-    Promise.all([api.get('offers'), api.get('market/accounts')])
-      .then(([ offers, accounts ]) => {
+    Promise.all([api.get('market/offer'), api.get('market/account')])
+      .then(([ offers, account ]) => {
         // Pair each holding with its asset type
-        const holdingAssets = _.chain(accounts)
-          .map(account => account.holdings)
+        const holdingAssets = _.chain(account.holdings)
           .flatten()
           .reduce((holdingAssets, holding) => {
             holdingAssets[holding.id] = holding.asset
@@ -100,16 +99,9 @@ const OfferListPage = {
             targetAsset: holdingAssets[offer.target]
           }, offer)
         })
-
         // If logged in, save account to state with asset quantities
-        const publicKey = api.getPublicKey()
-        if (publicKey) {
-          const account = accounts
-            .find(account => account.publicKey === publicKey)
-
-          const quantities = acct.getAssetQuantities(account)
-          vnode.state.account = _.assign({ quantities }, account)
-        }
+        const quantities = acct.getAssetQuantities(account)
+        vnode.state.account = _.assign({ quantities }, account)
       })
       .catch(api.ignoreError)
   },

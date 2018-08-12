@@ -55,10 +55,9 @@ func (h *Handler) FindOffers(w http.ResponseWriter, r *http.Request) {
 	if status != "" {
 		query["status"] = status
 	}
-
 	offers, err := h.Db.FetchOffers(query)
 	if err != nil {
-		log.Println("failed to find assets:" + err.Error())
+		log.Println("failed to find offers:" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -121,6 +120,7 @@ func (h *Handler) CreateOffer(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
 	defer cancel()
 
+	log.Println("creating offer for asset:" + createOffer.Asset)
 	createOfferReq := &pb.CreateOfferRequest{
 		Label:       createOffer.Label,
 		Description: createOffer.Description,

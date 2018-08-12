@@ -7,6 +7,7 @@ import (
 	crypto "github.com/rico-bee/leopark/crypto"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"golang.org/x/net/context"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -97,4 +98,13 @@ func unauthorised(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
 	w.Write([]byte("unauthorised access"))
+}
+
+func printObj(obj interface{}) string {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		log.Println(err.Error())
+		return ""
+	}
+	return string(data)
 }

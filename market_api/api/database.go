@@ -2,6 +2,7 @@ package api
 
 import (
 	// "encoding/json"
+	"errors"
 	crypto "github.com/rico-bee/leopark/crypto"
 	r "gopkg.in/gorethink/gorethink.v4"
 	"log"
@@ -29,20 +30,31 @@ func NewDBServer(url string) (*DbServer, error) {
 	return server, nil
 }
 
-func (db *DbServer) latestBlockNum() int64 {
+func (db *DbServer) latestBlockNum() (int64, error) {
 	cursor, err := r.DB("market").Table("blocks").Max("block_num").Run(db.session)
 	if err != nil {
 		log.Println("failed to find latest block number")
-		return 0
+		return 0, err
 	}
 	var b interface{}
 	cursor.One(&b)
-	//	blk := b.(Block)
-	return 3
+	blk, ok := b.(map[string]interface{})
+	if !ok {
+		log.Println("failed to find latest block")
+		return 0, errors.New("failed to find latest block: corrupted block data")
+	}
+	bf, ok := blk["block_num"].(float64)
+	if !ok {
+		return 0, errors.New("failed to find latest block: invalid block number")
+	}
+	return int64(bf), nil
 }
 
 func (db *DbServer) FindAssets() ([]Asset, error) {
-	blkNum := db.latestBlockNum()
+	blkNum, err := db.latestBlockNum()
+	if err != nil {
+		return nil, err
+	}
 	log.Println("latest block:" + strconv.FormatInt(blkNum, 10))
 	cursor, err := r.DB("market").Table("asset").Filter(r.Row.Field("start_block_num").Le(blkNum).And(r.Row.Field("end_block_num").Ge(blkNum))).Without("start_block_num", "end_block_num", "delta_id").Run(db.session)
 	assets := []Asset{}
@@ -124,7 +136,10 @@ func (s *DbServer) FetchHoldingsByIds(ids []string) map[string]*Holding {
 
 func (s *DbServer) FetchHoldings(ids r.Term) r.Term {
 	table := r.DB("market").Table("holding")
-	blkNum := s.latestBlockNum()
+	blkNum, err := s.latestBlockNum()
+	if err != nil {
+		log.Println("failed to find latest blknum:" + err.Error())
+	}
 	return table.GetAllByIndex("id", ids).
 		Filter(func(row r.Term) r.Term {
 			return row.Field("start_block_num").Le(blkNum).And(row.Field("end_block_num").Gt(blkNum))
@@ -152,9 +167,12 @@ func (s *DbServer) FindAccount(publicKey string) *Account {
 	return &acc
 }
 
-func (s *DbServer) FetchOffers(queryParams map[string]interface{}) ([]*Offer, error) {
+func (s *DbServer) FetchOffers(queryParams map[string]interface{}) ([]Offer, error) {
 	table := r.DB("market").Table("offer")
-	blkNum := s.latestBlockNum()
+	blkNum, err := s.latestBlockNum()
+	if err != nil {
+		return nil, err
+	}
 	cursor, err := table.Filter(queryParams).
 		Filter(func(row r.Term) r.Term {
 			return row.Field("start_block_num").Le(blkNum).And(row.Field("end_block_num").Gt(blkNum))
@@ -164,7 +182,7 @@ func (s *DbServer) FetchOffers(queryParams map[string]interface{}) ([]*Offer, er
 		log.Println("cannot get offers from db:" + err.Error())
 		return nil, err
 	}
-	offers := []*Offer{}
+	offers := []Offer{}
 	err = cursor.All(&offers)
 	if err != nil {
 		log.Println("cannot get offers from cursor:" + err.Error())

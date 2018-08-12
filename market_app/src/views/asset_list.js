@@ -40,7 +40,7 @@ const assetRowMapper = account => asset => {
   const offerDisabled = !account ||
     !account.quantities[asset.name] ||
     (asset.rules.find(({ type }) => type === 'NOT_TRANSFERABLE') &&
-      !asset.owners.find(owner => owner === account.publicKey))
+      !asset.owners.find(owner => owner === account.public_key))
   const requestDisabled = !account
 
   return m('.row.mb-5', [

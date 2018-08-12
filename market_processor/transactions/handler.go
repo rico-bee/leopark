@@ -30,24 +30,28 @@ func (h *MarketplaceHandler) Apply(request *processor_pb2.TpProcessRequest, cont
 	log.Println("applying the processor handler")
 
 	payload := NewMarketPayload(string(request.Payload))
+	var err error
 	if payload.IsCreateAccount() {
 		log.Println("handling account")
-		handleAccountCreation(payload.CreateAccount(), request.Header, state)
+		_, err = handleAccountCreation(payload.CreateAccount(), request.Header, state)
 	} else if payload.IsCreateAsset() {
 		log.Println("handling asset")
-		handleAssetCreation(payload.CreateAsset(), request.Header, state)
+		_, err = handleAssetCreation(payload.CreateAsset(), request.Header, state)
 	} else if payload.IsCreateHolding() {
 		log.Println("handling holding")
-		handleHoldingCreation(payload.CreateHolding(), request.Header, state)
+		_, err = handleHoldingCreation(payload.CreateHolding(), request.Header, state)
 	} else if payload.IsCreateOffer() {
 		log.Println("handling offer")
-		handleOfferCreation(payload.CreateOffer(), request.Header, state)
+		_, err = handleOfferCreation(payload.CreateOffer(), request.Header, state)
 	} else if payload.IsAcceptOffer() {
 		log.Println("handling accept account")
-		handleOfferAcceptance(payload.AcceptOffer(), request.Header, state)
+		_, err = handleOfferAcceptance(payload.AcceptOffer(), request.Header, state)
 	} else if payload.IsCloseOffer() {
 		log.Println("handling close account")
-		handleCloseOffer(payload.CloseOffer(), request.Header, state)
+		_, err = handleCloseOffer(payload.CloseOffer(), request.Header, state)
+	}
+	if err != nil {
+		log.Println("failed to process transaction : " + err.Error())
 	}
 	return nil
 }

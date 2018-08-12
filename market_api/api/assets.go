@@ -10,6 +10,35 @@ import (
 	"time"
 )
 
+var (
+	Rule_RuleType_name = map[int32]string{
+		0:   "RULE_UNSET",
+		100: "OWNER_HOLDINGS_INFINITE",
+		101: "ALL_HOLDINGS_INFINITE",
+		102: "NOT_TRANSFERABLE",
+		103: "REQUIRE_SOURCE_TYPES",
+		104: "REQUIRE_TARGET_TYPES",
+		105: "REQUIRE_SOURCE_QUANTITIES",
+		106: "REQUIRE_TARGET_QUANTITIES",
+		200: "EXCHANGE_ONCE",
+		201: "EXCHANGE_ONCE_PER_ACCOUNT",
+		202: "EXCHANGE_LIMITED_TO_ACCOUNTS",
+	}
+	Rule_RuleType_value = map[string]int32{
+		"RULE_UNSET":                   0,
+		"OWNER_HOLDINGS_INFINITE":      100,
+		"ALL_HOLDINGS_INFINITE":        101,
+		"NOT_TRANSFERABLE":             102,
+		"REQUIRE_SOURCE_TYPES":         103,
+		"REQUIRE_TARGET_TYPES":         104,
+		"REQUIRE_SOURCE_QUANTITIES":    105,
+		"REQUIRE_TARGET_QUANTITIES":    106,
+		"EXCHANGE_ONCE":                200,
+		"EXCHANGE_ONCE_PER_ACCOUNT":    201,
+		"EXCHANGE_LIMITED_TO_ACCOUNTS": 202,
+	}
+)
+
 func (h *Handler) FindAssets(w http.ResponseWriter, r *http.Request) {
 	_, err := h.CurrentUser(w, r)
 	if err != nil {
@@ -58,8 +87,13 @@ func (h *Handler) FindAsset(w http.ResponseWriter, r *http.Request) {
 func mapRules(rules []*Rule) []*pb.AssetRule {
 	assetRules := []*pb.AssetRule{}
 	for _, r := range rules {
+		t, ok := Rule_RuleType_value[r.Type]
+		if !ok {
+			log.Println("incorrect rule type detected, ignore")
+			continue
+		}
 		assetRules = append(assetRules, &pb.AssetRule{
-			Type:  r.Type,
+			Type:  t,
 			Value: r.Value,
 		})
 	}

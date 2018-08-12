@@ -308,7 +308,7 @@ func (s *MarketState) GetAccount(accountKey string) (*pb.Account, error) {
 	address := addresser.MakeAccountAddress(accountKey)
 	err := s.fetchState(address)
 	if err != nil {
-		log.Println("cannot fetch state data")
+		log.Println("cannot fetch state data for account:")
 		return nil, err
 	}
 
@@ -351,7 +351,7 @@ func (s *MarketState) GetAsset(name string) *pb.Asset {
 	address := addresser.MakeAssetAddress(name)
 	err := s.fetchState(address)
 	if err != nil {
-		log.Println("cannot fetch state data")
+		log.Println("cannot fetch state data for asset: " + name + ":" + address)
 		return nil
 	}
 	container, err := s.GetAssetContainer(address)
@@ -424,7 +424,7 @@ func (s *MarketState) GetHolding(identifier string) (*pb.Holding, error) {
 	address := addresser.MakeHoldingAddress(identifier)
 	err := s.fetchState(address)
 	if err != nil {
-		log.Println("cannot fetch state data")
+		log.Println("cannot fetch state data for holding:" + address)
 		return nil, err
 	}
 	container, err := s.GetHoldingContainer(address)
@@ -465,9 +465,14 @@ func (s *MarketState) FindOfferRules(holdingId string) []*pb.Rule {
 		return nil
 	}
 	asset := s.GetAsset(holding.Asset)
+
+	log.Println("finding offer rule: " + holding.Asset)
+
 	if asset == nil {
+		log.Println("failed to find asset")
 		return nil
 	}
+	log.Println("found it:" + asset.Name)
 	rules := make([]*pb.Rule, len(asset.Rules), (cap(asset.Rules)+1)*2)
 	for idx, r := range asset.Rules {
 		rules[idx] = r
@@ -483,9 +488,13 @@ func (s *MarketState) SetOffer(identifier, label, description,
 	addr := addresser.MakeOfferAddress(identifier)
 	container, err := s.GetOfferContainer(addr)
 	if err != nil {
-		log.Println("cannot get offer container")
-		return nil, err
+		log.Println("offer container doesn't exist: " + addr)
+		if container == nil {
+			log.Println("initializing offer container")
+			container = &pb.OfferContainer{}
+		}
 	}
+
 	offer := &pb.Offer{
 		Id:             identifier,
 		Label:          label,
@@ -501,7 +510,7 @@ func (s *MarketState) SetOffer(identifier, label, description,
 
 	srcRule := s.FindOfferRules(source)
 	if srcRule == nil {
-		log.Println("failed to find offer rule")
+		log.Println("failed to find offer rule for source")
 	} else {
 		offer.Rules = append(offer.Rules, srcRule...)
 	}
@@ -513,6 +522,8 @@ func (s *MarketState) SetOffer(identifier, label, description,
 			offer.Rules = append(offer.Rules, targetRule...)
 		}
 	}
+	log.Println("adding offer into container:")
+	container.Entries = append(container.Entries, offer)
 	state := make(map[string][]byte)
 	state[addr], err = proto.Marshal(container)
 	if err != nil {
@@ -526,7 +537,7 @@ func (s *MarketState) GetOffer(identifier string) (*pb.Offer, error) {
 	addr := addresser.MakeOfferAddress(identifier)
 	err := s.fetchState(addr)
 	if err != nil {
-		log.Println("cannot fetch state data")
+		log.Println("cannot fetch state data for offer:" + addr)
 		return nil, err
 	}
 	container, err := s.GetOfferContainer(addr)

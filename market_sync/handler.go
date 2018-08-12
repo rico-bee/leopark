@@ -17,7 +17,7 @@ var (
 	NS_REGEX, _ = regexp.Compile("^" + addresser.NS)
 )
 
-func blockParser(done <-chan interface{}, es <-chan *events.Event) <-chan *Block {
+func blockParser(es <-chan *events.Event) <-chan *Block {
 	blockStream := make(chan *Block)
 	go func() {
 		defer close(blockStream)
@@ -67,7 +67,7 @@ func processEventList(done <-chan interface{}, es <-chan *events.Event, db *DbSe
 			}
 		}
 	}()
-	bs := blockParser(done, blockCommitStream)
+	bs := blockParser(blockCommitStream)
 	processStateChange(done, blockDeltaStream, bs, db)
 }
 

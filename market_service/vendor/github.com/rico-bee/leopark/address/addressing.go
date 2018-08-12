@@ -99,10 +99,6 @@ func MakeHoldingAddress(holdingId string) string {
 func MakeAccountAddress(accountId string) string {
 	hash := hash512(accountId)
 	compressedKey := compress(hash, AccountStart, AccountEnd)
-	log.Println("ns prefix:" + NS)
-	log.Println("compressedKey:" + compressedKey)
-	hashLen := len(hash[:62])
-	log.Println("length of key:" + strconv.Itoa(hashLen))
 	return NS + compressedKey + hash[:62]
 }
 

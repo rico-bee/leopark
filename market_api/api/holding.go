@@ -1,12 +1,18 @@
 package api
 
 import (
+	"encoding/json"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
 	"golang.org/x/net/context"
 	"log"
 	"net/http"
 	"time"
 )
+
+func PrintObj(msg interface{}) string {
+	data, _ := json.Marshal(msg)
+	return string(data)
+}
 
 func (h *Handler) CreateHolding(w http.ResponseWriter, r *http.Request) {
 	auth, err := h.CurrentUser(w, r)
@@ -15,15 +21,15 @@ func (h *Handler) CreateHolding(w http.ResponseWriter, r *http.Request) {
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
 	defer cancel()
-
-	createAssetReq := &pb.CreateHoldingRequest{
+	log.Println("creating holding:" + PrintObj(createholding))
+	createHoldingReq := &pb.CreateHoldingRequest{
 		Label:      createholding.Label,
 		Descrption: createholding.Description, /// fix the typo todo
 		Asset:      createholding.Asset,
 		Quantity:   createholding.Quantity,
 		PrivateKey: auth.PrivateKey,
 	}
-	res, err := h.RpcClient.DoCreateHolding(ctx, createAssetReq)
+	res, err := h.RpcClient.DoCreateHolding(ctx, createHoldingReq)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		log.Println("failed to make rpc call:" + err.Error())

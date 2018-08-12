@@ -5,22 +5,17 @@ import (
 	transactions "github.com/rico-bee/leopark/market_processor/transactions"
 	"log"
 	"os"
-	"os/signal"
+	// "os/signal"
+	// "syscall"
 )
 
 func main() {
 	processor := processorSdk.NewTransactionProcessor("tcp://localhost:4040") // pass in validator url
 	handler := transactions.MarketplaceHandler{}
 	processor.AddHandler(&handler)
+	processor.ShutdownOnSignal(os.Interrupt, os.Kill)
 	err := processor.Start()
-	c := make(chan os.Signal, 1)
-	// Passing no signals to Notify means that
-	// all signals will be sent to the channel.
-	signal.Notify(c)
-	s := <-c
-	processor.Shutdown()
-	log.Println("gracefully exit:" + s.String())
 	if err != nil {
-		log.Fatal("Failed to start processor")
+		log.Fatal("cannot start processor:" + err.Error())
 	}
 }

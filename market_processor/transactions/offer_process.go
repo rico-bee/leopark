@@ -50,6 +50,9 @@ func ownsAsset(publicKey string, owners []string) bool {
 }
 
 func isNotTransferrable(asset *pb.Asset, ownerKey string) bool {
+	if asset == nil {
+		log.Println("asset is nil is not transferrable")
+	}
 	return hasRule(asset.Rules, pb.Rule_NOT_TRANSFERABLE) && !ownsAsset(ownerKey, asset.Owners)
 }
 
@@ -66,8 +69,10 @@ func handleOfferCreation(createOffer *pb.CreateOffer, header *pb2.TransactionHea
 	acc, err := state.GetAccount(header.SignerPublicKey)
 	if acc == nil {
 		//return nil, errors.New("cannot find the account")
-		log.Fatal("error when getting account")
+		return nil, errors.New("error when getting account")
 	}
+
+	log.Println("creating offer......")
 	if createOffer.Source == "" {
 		return []string{}, errors.New("Cannot find source in createOffer request")
 	}
@@ -75,6 +80,7 @@ func handleOfferCreation(createOffer *pb.CreateOffer, header *pb2.TransactionHea
 		return []string{}, errors.New("Source quantity cannot be 0 in createOffer request")
 	}
 
+	log.Println("finding offer source:" + createOffer.Source)
 	holding, err := state.GetHolding(createOffer.Source)
 	if holding == nil {
 		return []string{}, errors.New("Source holding cannot be found")
@@ -83,10 +89,12 @@ func handleOfferCreation(createOffer *pb.CreateOffer, header *pb2.TransactionHea
 		return []string{}, errors.New("Failed to create Offer, source asset are not transferable")
 	}
 
-	if (createOffer.Target != "" && createOffer.TargetQuantity == 0) || (createOffer.Target == "" && createOffer.TargetQuantity > 0) {
+	if (createOffer.Target != "" && createOffer.TargetQuantity == 0) ||
+		(createOffer.Target == "" && createOffer.TargetQuantity > 0) {
 		return []string{}, errors.New("failed to create Offer, target and target_quantity must both be set or both unset")
 	}
 
+	log.Println("checking target")
 	if createOffer.Target != "" {
 		targetHolding, err := state.GetHolding(createOffer.Target)
 		if err != nil {
@@ -99,10 +107,12 @@ func handleOfferCreation(createOffer *pb.CreateOffer, header *pb2.TransactionHea
 			return []string{}, errors.New("Failed to create Offer, target Holding account not owned by txn signer")
 		}
 		targetAsset := state.GetAsset(targetHolding.Asset)
-		if isNotTransferrable(targetAsset, header.SignerPublicKey) {
+		if targetAsset != nil && isNotTransferrable(targetAsset, header.SignerPublicKey) {
 			return []string{}, errors.New("Failed to create Offer, not transferrable")
 		}
 	}
+
+	log.Println("creating offer with id:" + createOffer.Id)
 	return state.SetOffer(
 		createOffer.Id,
 		createOffer.Label,
