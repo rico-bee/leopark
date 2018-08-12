@@ -151,6 +151,7 @@ const isFormValid = state => {
 const submitter = (state, onDone) => () => {
   return Promise.resolve()
     .then(() => {
+      onDone()
       if (state.hasNewHolding) {
         const holdingKeys = ['label', 'description', 'asset']
         return api.post('market/holding', _.pick(state.holding, holdingKeys))

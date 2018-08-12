@@ -33,10 +33,14 @@ func (h *Handler) CreateHolding(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		log.Println("failed to make rpc call:" + err.Error())
+		log.Println("holding created failed")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else {
+		log.Println("holding created ok")
 		w.WriteHeader(http.StatusOK)
 	}
-	w.Write([]byte(res.Message))
+	newHolding := &CreateHoldingResponse{Id: res.Id}
+	data, _ := json.Marshal(newHolding)
+	w.Write(data)
 }

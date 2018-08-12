@@ -65,10 +65,10 @@ const offerRow = account => offer => {
       m('.col-md-3.text-right', acceptButton(offer, account))),
     mkt.bifold({
       header: offer.sourceAsset,
-      body: offer.sourceQuantity
+      body: offer.source_quantity
     }, {
       header: offer.targetAsset,
-      body: offer.targetQuantity || 'free'
+      body: offer.target_quantity || 'free'
     })
   ]
 }

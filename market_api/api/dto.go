@@ -64,6 +64,10 @@ type CreateOfferRequest struct {
 	Rules          []*Rule `json:"rules"`
 }
 
+type CreateOfferResponse struct {
+	Id string `json:"id"`
+}
+
 type AcceptOfferRequest struct {
 	ID     string `json:"id"`
 	Count  int64  `json:"count"`
@@ -78,4 +82,8 @@ type CreateHoldingRequest struct {
 	Description string `json:"description"`
 	Asset       string `json:"asset"`
 	Quantity    int64  `json:"quantity"`
+}
+
+type CreateHoldingResponse struct {
+	Id string `json:"id"`
 }

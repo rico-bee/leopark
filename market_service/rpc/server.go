@@ -110,7 +110,7 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 	if !committed {
 		return nil, err
 	}
-	return &pb.CreateHoldingResponse{Message: "sucess"}, nil
+	return &pb.CreateHoldingResponse{Id: id}, nil
 }
 
 func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) (*pb.CreateOfferResponse, error) {
@@ -126,7 +126,7 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 		return nil, err
 	}
 	id, _ := uuid.GenerateUUID()
-	log.Println("we creating offer with src asset: " + req.Source.Asset)
+
 	batches, signature := transaction.CreateOffer(signer, s.signer, id, req.Label, req.Description,
 		MapHolding(req.Source), MapHolding(req.Target), mktRules)
 	if signature == "" {
@@ -142,7 +142,7 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 	if !committed {
 		return nil, err
 	}
-	return &pb.CreateOfferResponse{Message: "success"}, nil
+	return &pb.CreateOfferResponse{Id: id}, nil
 }
 
 func (s *server) DoAcceptOffer(ctx context.Context, req *pb.AcceptOfferRequest) (*pb.AcceptOfferResponse, error) {

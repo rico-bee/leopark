@@ -122,14 +122,20 @@ func (h *Handler) CreateOffer(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	log.Println("creating offer for asset:" + createOffer.Asset)
+
 	createOfferReq := &pb.CreateOfferRequest{
 		Label:       createOffer.Label,
 		Description: createOffer.Description,
 		Source:      mapMarketplaceHolding(createOffer.Source, createOffer.Asset, createOffer.SrcQuantity),
-		Target:      mapMarketplaceHolding(createOffer.Target, createOffer.Asset, createOffer.TargetQuantity),
 		Rules:       mapRules(createOffer.Rules),
 		PrivateKey:  auth.PrivateKey,
 	}
+
+	if createOffer.Target != "" {
+		log.Println("target is defined:" + createOffer.Target)
+		createOfferReq.Target = mapMarketplaceHolding(createOffer.Target, createOffer.Asset, createOffer.TargetQuantity)
+	}
+
 	res, err := h.RpcClient.DoCreateOffer(ctx, createOfferReq)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
@@ -139,7 +145,12 @@ func (h *Handler) CreateOffer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-	w.Write([]byte(res.Message))
+
+	newOffer := CreateOfferResponse{
+		Id: res.Id,
+	}
+	data, _ := json.Marshal(newOffer)
+	w.Write(data)
 }
 
 func mapOfferParticipant(srcId, targetId string, source, target *Holding) *pb.OfferParticipant {

@@ -71,7 +71,7 @@ message CreateHoldingRequest {
 
 // The response message containing the greetings
 message CreateHoldingResponse {
-  string message = 1;
+  string id = 1;
 }
 
 message MarketplaceHolding {
@@ -97,7 +97,7 @@ message CreateOfferRequest {
 }
 
 message CreateOfferResponse {
-  string message = 1;
+  string id = 1;
 }
 
 message AcceptOfferRequest {

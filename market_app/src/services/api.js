@@ -81,7 +81,7 @@ const patch = _.partial(request, 'PATCH')
  * Appropriate for requests triggered by user action.
  */
 const alertError = err => {
-  console.error(err)
+  console.error("blahblah" + err)
   window.alert(err.error || err.message || err)
   window.location.reload()
 }
