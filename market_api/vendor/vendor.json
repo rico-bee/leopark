@@ -1,0 +1,97 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "ukgbJdhLmQYR/sfC5uJzB3XCgqQ=",
+			"path": "github.com/cenkalti/backoff",
+			"revision": "f756bc9a37f808627c8c1b26d2d6ea40c468440b",
+			"revisionTime": "2018-05-18T09:06:49Z"
+		},
+		{
+			"checksumSHA1": "O0r0hj4YL+jSRNjnshkeH4GY+4s=",
+			"path": "github.com/hailocab/go-hostpool",
+			"revision": "e80d13ce29ede4452c43dea11e79b9bc8a15b478",
+			"revisionTime": "2016-01-25T11:53:50Z"
+		},
+		{
+			"checksumSHA1": "wIcN7tZiF441h08RHAm4NV8cYO4=",
+			"path": "github.com/opentracing/opentracing-go",
+			"revision": "bd9c3193394760d98b2fa6ebb2291f0cd1d06a7d",
+			"revisionTime": "2018-06-06T20:41:48Z"
+		},
+		{
+			"checksumSHA1": "uhDxBvLEqRAMZKgpTZ8MFuLIIM8=",
+			"path": "github.com/opentracing/opentracing-go/ext",
+			"revision": "bd9c3193394760d98b2fa6ebb2291f0cd1d06a7d",
+			"revisionTime": "2018-06-06T20:41:48Z"
+		},
+		{
+			"checksumSHA1": "tnkdNJbJxNKuPZMWapP1xhKIIGw=",
+			"path": "github.com/opentracing/opentracing-go/log",
+			"revision": "bd9c3193394760d98b2fa6ebb2291f0cd1d06a7d",
+			"revisionTime": "2018-06-06T20:41:48Z"
+		},
+		{
+			"checksumSHA1": "DGSBFdm+lpnL3Rgqznb0YPoYeYU=",
+			"path": "github.com/rico-bee/leopark/crypto",
+			"revision": "cedf0dfca9c85bbdd45f2693f70ba11d54e91500",
+			"revisionTime": "2018-08-12T08:21:55Z"
+		},
+		{
+			"checksumSHA1": "olskDBFejVgEO3vkYoHLQRFRcUQ=",
+			"path": "github.com/rico-bee/leopark/market",
+			"revision": "cedf0dfca9c85bbdd45f2693f70ba11d54e91500",
+			"revisionTime": "2018-08-12T08:21:55Z"
+		},
+		{
+			"checksumSHA1": "oCH3J96RWvO8W4xjix47PModpio=",
+			"path": "golang.org/x/crypto/bcrypt",
+			"revision": "1a580b3eff7814fc9b40602fd35256c63b50f491",
+			"revisionTime": "2018-05-14T23:55:10Z"
+		},
+		{
+			"checksumSHA1": "oVPHWesOmZ02vLq2fglGvf+AMgk=",
+			"path": "golang.org/x/crypto/blowfish",
+			"revision": "1a580b3eff7814fc9b40602fd35256c63b50f491",
+			"revisionTime": "2018-05-14T23:55:10Z"
+		},
+		{
+			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
+			"path": "golang.org/x/crypto/pbkdf2",
+			"revision": "1a580b3eff7814fc9b40602fd35256c63b50f491",
+			"revisionTime": "2018-05-14T23:55:10Z"
+		},
+		{
+			"checksumSHA1": "P8yR+xObqoPUA4fcLFV2eGNNSWc=",
+			"path": "gopkg.in/fatih/pool.v2",
+			"revision": "010e0b745d12eaf8426c95f9c3924d81dd0b668f",
+			"revisionTime": "2017-10-10T08:14:17Z"
+		},
+		{
+			"checksumSHA1": "VGHJdYKmjpRrYZLL//RDkCv/lIU=",
+			"path": "gopkg.in/gorethink/gorethink.v4",
+			"revision": "eec03bd47cfc11965a9de004ff86add2a88e65b0",
+			"revisionTime": "2017-12-14T15:00:17Z"
+		},
+		{
+			"checksumSHA1": "m4r8pb6qDB82QEwlDcSfevL0Q0E=",
+			"path": "gopkg.in/gorethink/gorethink.v4/encoding",
+			"revision": "eec03bd47cfc11965a9de004ff86add2a88e65b0",
+			"revisionTime": "2017-12-14T15:00:17Z"
+		},
+		{
+			"checksumSHA1": "+h6JKQLmkoVeawfAXif5QQxx05Q=",
+			"path": "gopkg.in/gorethink/gorethink.v4/ql2",
+			"revision": "eec03bd47cfc11965a9de004ff86add2a88e65b0",
+			"revisionTime": "2017-12-14T15:00:17Z"
+		},
+		{
+			"checksumSHA1": "b5QALboaWWtOUzo6ChPiBKcEhcU=",
+			"path": "gopkg.in/gorethink/gorethink.v4/types",
+			"revision": "eec03bd47cfc11965a9de004ff86add2a88e65b0",
+			"revisionTime": "2017-12-14T15:00:17Z"
+		}
+	],
+	"rootPath": "github.com/rico-bee/leopark/market_api"
+}

@@ -48,7 +48,7 @@ type Offer struct {
 	Description    string   `gorethink:"description" json:"description,omitempty"`
 	Owners         []string `gorethink:"owners" json:"owners,omitempty"`
 	Source         string   `gorethink:"source" json:"source,omitempty"`
-	SourceQuantity int64    `gorethink:"sourceQuantity" json:"source_quantity,omitempty"`
+	SourceQuantity int64    `gorethink:"source_quantity" json:"source_quantity,omitempty"`
 	Target         string   `gorethink:"target" json:"target,omitempty"`
 	TargetQuantity int64    `gorethink:"target_quantity" json:"target_quantity,omitempty"`
 	Rules          []*Rule  `gorethink:"rules" json:"rules,omitempty"`

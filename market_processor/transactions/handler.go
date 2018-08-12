@@ -41,13 +41,13 @@ func (h *MarketplaceHandler) Apply(request *processor_pb2.TpProcessRequest, cont
 		log.Println("handling holding")
 		_, err = handleHoldingCreation(payload.CreateHolding(), request.Header, state)
 	} else if payload.IsCreateOffer() {
-		log.Println("handling offer")
+		log.Println("handling create offer")
 		_, err = handleOfferCreation(payload.CreateOffer(), request.Header, state)
 	} else if payload.IsAcceptOffer() {
-		log.Println("handling accept account")
+		log.Println("handling accept offer")
 		_, err = handleOfferAcceptance(payload.AcceptOffer(), request.Header, state)
 	} else if payload.IsCloseOffer() {
-		log.Println("handling close account")
+		log.Println("handling close offer")
 		_, err = handleCloseOffer(payload.CloseOffer(), request.Header, state)
 	}
 	if err != nil {

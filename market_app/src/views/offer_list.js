@@ -39,7 +39,10 @@ const filterDropdown = (label, assets, setter) => {
 }
 
 const acceptButton = (offer, account = null) => {
-  const onclick = () => acceptOffer(offer.id)
+  const onclick = () => {
+    console.log("are you kidding me???")
+    acceptOffer(offer.id)
+  }
   let disabled = false
   if (!account) disabled = true
   else if (offer.targetQuantity === 0) disabled = false

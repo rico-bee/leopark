@@ -60,7 +60,7 @@ const inSetter = state => (holding, hasNew) => () => {
 }
 
 const countSetter = state => inQuantity => {
-  let count = Math.floor(inQuantity / state.offer.sourceQuantity)
+  let count = Math.floor(inQuantity / state.offer.source_quantity)
   if (inQuantity !== 0) count = Math.max(count, 1)
 
   const exchangeOnce = state.offer.rules.find(({ type }) => {
@@ -68,17 +68,17 @@ const countSetter = state => inQuantity => {
   })
   if (exchangeOnce) count = Math.min(count, 1)
 
-  if (count * state.offer.sourceQuantity > state.inMax) {
-    count = Math.floor(state.inMax / state.offer.sourceQuantity)
+  if (count * state.offer.source_quantity > state.inMax) {
+    count = Math.floor(state.inMax / state.offer.source_quantity)
   }
 
-  if (count * state.offer.targetQuantity > state.outMax) {
-    count = Math.floor(state.outMax / state.offer.targetQuantity)
+  if (count * state.offer.target_quantity > state.outMax) {
+    count = Math.floor(state.outMax / state.offer.target_quantity)
   }
 
   state.acceptance.count = count
-  state.inQuantity = count * state.offer.sourceQuantity
-  state.outQuantity = count * state.offer.targetQuantity
+  state.inQuantity = count * state.offer.src_quantity
+  state.outQuantity = count * state.offer.target_quantity
 }
 
 // Returns a function to map holding data to dropdown options
@@ -118,7 +118,7 @@ const submitter = (state, onDone) => () => {
     .then(() => {
       if (state.hasNewHolding) {
         const holdingKeys = ['label', 'description', 'asset']
-        return api.post('holdings', _.pick(state.holding, holdingKeys))
+        return api.post('market/holding', _.pick(state.holding, holdingKeys))
       }
     })
     .then(holding => {
@@ -128,7 +128,7 @@ const submitter = (state, onDone) => () => {
       }
       if (state.acceptance.out) acceptance.source = state.acceptance.out
       if (holding) acceptance.target = holding.id
-      return api.patch(`offers/${state.offer.id}/accept`, acceptance)
+      return api.patch(`market/offer/${state.offer.id}/accept`, acceptance)
     })
     .then(onDone)
     .then(() => m.route.set('/account'))
@@ -148,14 +148,15 @@ const AcceptOfferModal = {
     vnode.state.acceptance = {}
     vnode.state.hasNewHolding = false
 
-    api.get(`offers/${vnode.attrs.offerId}`)
-      .then(offer => {
+    api.get(`market/offer/${vnode.attrs.offerId}`)
+      .then(res => {
+        const offer = res.offer
         if (offer.error) return console.error(offer.error)
         vnode.state.offer = offer
 
         return Promise.all([
           acct.getUserAccount(),
-          api.get(`market/account/${offer.owners[0]}`)
+          api.get(`market/account?key=${offer.owners[0]}`)
         ])
       })
       .then(([ user, owner ]) => {
@@ -182,7 +183,8 @@ const AcceptOfferModal = {
 
         return Promise.all([ owner, api.get(`market/asset/${inAsset}`) ])
       })
-      .then(([ owner, inAsset ]) => {
+      .then(([ owner, res ]) => {
+        const inAsset = res.asset
         const allInfinite = inAsset.rules.find(({ type }) => {
           return type === 'ALL_HOLDINGS_INFINITE'
         })
@@ -250,6 +252,7 @@ const AcceptOfferModal = {
  * Displays a modal which will guide the user through accepting an Offer
  */
 const acceptOffer = offerId => {
+  console.log("are we getting here?")
   return modals.show(AcceptOfferModal, { offerId })
     .catch(() => console.log('Accepting offer canceled'))
 }

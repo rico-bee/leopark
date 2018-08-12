@@ -384,8 +384,8 @@ func (a *OfferAcceptance) handleExchangeOnce() ([]string, error) {
 func handleOfferAcceptance(acceptOffer *pb.AcceptOffer, header *pb2.TransactionHeader, state *MarketState) ([]string, error) {
 	offer, err := state.GetOffer(acceptOffer.Id)
 	if err != nil {
-		log.Println("")
-		return []string{}, errors.New("User doesn't own the offer")
+		log.Println("cannto find offer:" + acceptOffer.Id)
+		return []string{}, err
 	}
 	if offer == nil || offer.Status != pb.Offer_OPEN {
 		return []string{}, errors.New("Offer is not valid")
@@ -394,31 +394,38 @@ func handleOfferAcceptance(acceptOffer *pb.AcceptOffer, header *pb2.TransactionH
 	offerAcceptance := newOfferAcceptance(acceptOffer, header, state)
 	err = offerAcceptance.validateExchangeOnce()
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 	err = offerAcceptance.validateOncePerAccount()
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 	err = offerAcceptance.validateAccountsLimitedTo()
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 	err = offerAcceptance.validateOutputHoldingExists()
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 	err = offerAcceptance.validateInputHoldingExists()
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 	err = offerAcceptance.validateInputHoldingAssets()
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 	err = offerAcceptance.validateOutputHoldingAssets()
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 
 	calculator := &offerCalcuator{
@@ -428,11 +435,13 @@ func handleOfferAcceptance(acceptOffer *pb.AcceptOffer, header *pb2.TransactionH
 
 	err = offerAcceptance.validateOutputEnough(calculator.outputQuantity())
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 	err = offerAcceptance.validateInputEnough(calculator.inputQuantity())
 	if err != nil {
-		return []string{}, errors.New("offer cannot be processed")
+		log.Println("failed to process offer acceptance")
+		return nil, err
 	}
 
 	ret, err := offerAcceptance.handleOffererSource(calculator.inputQuantity())
