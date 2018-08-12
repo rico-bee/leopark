@@ -155,9 +155,7 @@ const submitter = (state, onDone) => () => {
         const holdingKeys = ['label', 'description', 'asset']
         return api.post('market/holding', _.pick(state.holding, holdingKeys))
       }
-    })
-    .then(holding => {
-
+    }).then(holding => {
       const offerKeys = [
         'label', 'description', 'source', 'src_quantity',
         'target', 'target_quantity'

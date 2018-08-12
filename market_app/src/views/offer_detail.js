@@ -40,10 +40,11 @@ const acceptButton = (label, onclick, disabled = false) => {
 const OfferDetailPage = {
   oninit (vnode) {
     Promise.all([
-      api.get(`offers/${vnode.attrs.id}`),
+      api.get(`market/offer/${vnode.attrs.id}`),
       acct.getUserAccount()
     ])
-      .then(([ offer, user ]) => {
+      .then(([ res, user ]) => {
+        const offer = res.offer
         vnode.state.offer = offer
 
         if (!user) {
@@ -63,14 +64,16 @@ const OfferDetailPage = {
         }
 
         const owner = offer.owners[0]
-        if (user && user.publicKey === owner) return user
-        return api.get(`accounts/${owner}`)
+        if (user && user.public_key === owner) return user
+        return api.get(`market/account/${owner}`)
       })
       .then(owner => {
         if (!owner || owner.error) return
         const offer = vnode.state.offer
         offer.sourceAsset = findAsset(offer.source, owner.holdings)
-        offer.targetAsset = findAsset(offer.target, owner.holdings)
+        if (offer.target) {
+          offer.targetAsset = findAsset(offer.target, owner.holdings)
+        }
         vnode.state.owner = owner
       })
       .catch(api.ignoreError)
@@ -81,7 +84,7 @@ const OfferDetailPage = {
     const owner = _.get(vnode.state, 'owner', {})
     const name = offer.label || offer.id
     const rules = offer.rules || []
-    const ownerName = owner.label || owner.publicKey
+    const ownerName = owner.email || owner.public_key
 
     return [
       layout.title(name),

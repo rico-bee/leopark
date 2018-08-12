@@ -67,6 +67,7 @@ func (h *Handler) FindOffers(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	log.Println("offers:" + string(data))
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }

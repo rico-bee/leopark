@@ -74,7 +74,7 @@ type AcceptOfferRequest struct {
 type AcceptOfferResponse struct{}
 
 type CreateHoldingRequest struct {
-	Label       string `json:"name"`
+	Label       string `json:"label"`
 	Description string `json:"description"`
 	Asset       string `json:"asset"`
 	Quantity    int64  `json:"quantity"`
