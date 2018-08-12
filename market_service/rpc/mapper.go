@@ -7,6 +7,9 @@ import (
 )
 
 func MapHolding(rpcHolding *pb.MarketplaceHolding) *tx.MarketplaceHolding {
+	if rpcHolding == nil {
+		return nil
+	}
 	return &tx.MarketplaceHolding{
 		HoldingId: rpcHolding.HoldingId,
 		Quantity:  rpcHolding.Quantity,

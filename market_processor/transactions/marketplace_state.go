@@ -250,7 +250,6 @@ func (s *MarketState) AddHoldingToAccount(accountId, holdingId string) ([]string
 	// 	}
 	// 	container.Entries = append(container.GetEntries(), account)
 	// }
-	log.Println("adding holdings..")
 	if account == nil {
 		log.Println("add holding to account failed: cannot find account:" + accountId)
 		return nil, errors.New("add holding to account failed: cannot find account:" + accountId)

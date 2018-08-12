@@ -8,12 +8,13 @@ import (
 )
 
 var (
-	version string
+	version string = "0.0.1"
 )
 
 func main() {
 
 	showversion := kingpin.Flag("version", "Show version information.").Short('v').Bool()
+	validatorUrl := kingpin.Flag("validator", "Validator Url.").Default("tcp://localhost:4040").Short('d').String()
 	configPath := kingpin.Flag("config", "Optional config file path.").Default("config.user.json").String()
 	kingpin.Parse()
 
@@ -27,5 +28,8 @@ func main() {
 		fmt.Printf("Config file: %s not found.\n", *configPath)
 		os.Exit(1)
 	}
-	rpc.StartRpcServer()
+	if validatorUrl == nil {
+		panic("no validator url is defined")
+	}
+	rpc.StartRpcServer(*validatorUrl)
 }

@@ -154,12 +154,16 @@ func (h *Handler) CreateOffer(w http.ResponseWriter, r *http.Request) {
 }
 
 func mapOfferParticipant(srcId, targetId string, source, target *Holding) *pb.OfferParticipant {
-	return &pb.OfferParticipant{
+	p := &pb.OfferParticipant{
 		SrcHolding:    srcId,
 		TargetHolding: targetId,
 		SrcAsset:      source.Asset,
-		TargetAsset:   target.Asset,
 	}
+
+	if target != nil {
+		p.TargetAsset = target.Asset
+	}
+	return p
 }
 
 func (h *Handler) AcceptOffer(w http.ResponseWriter, r *http.Request) {
@@ -184,7 +188,7 @@ func (h *Handler) AcceptOffer(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	ids := []string{acceptOffer.Source, acceptOffer.Target}
+	ids := []string{offer.Source, acceptOffer.Target}
 
 	holdings := h.Db.FetchHoldingsByIds(ids)
 	if holdings == nil {
@@ -192,11 +196,14 @@ func (h *Handler) AcceptOffer(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	log.Println("holdings" + printObj(holdings))
+	log.Println("source" + printObj(offer))
+	log.Println("create offer" + printObj(acceptOffer))
 	acceptOfferReq := &pb.AcceptOfferRequest{
 		Identifier: id,
-		Sender:     mapOfferParticipant(offer.Source, offer.Target, holdings[acceptOffer.Source], holdings[acceptOffer.Target]),
-		Receiver:   mapOfferParticipant(acceptOffer.Source, acceptOffer.Target, holdings[acceptOffer.Source], holdings[acceptOffer.Target]),
+		Count:      acceptOffer.Count,
+		Sender:     mapOfferParticipant(offer.Source, offer.Target, holdings[offer.Source], holdings[acceptOffer.Target]),
+		Receiver:   mapOfferParticipant(acceptOffer.Source, acceptOffer.Target, holdings[offer.Source], holdings[acceptOffer.Target]),
 		PrivateKey: auth.PrivateKey,
 	}
 	res, err := h.RpcClient.DoAcceptOffer(ctx, acceptOfferReq)

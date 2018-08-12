@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	port = ":50051"
+	port                = ":50051"
+	defaultValidatorUrl = ""
 )
 
 type server struct {
@@ -174,9 +175,8 @@ func (s *server) DoCloseOffer(ctx context.Context, req *pb.CloseOfferRequest) (*
 	return &pb.CloseOfferResponse{Message: "success"}, nil
 }
 
-func newRpcServer() *server {
-	api := transaction.NewSawtoothApi("tcp://localhost:4040")
-
+func newRpcServer(url string) *server {
+	api := transaction.NewSawtoothApi(url)
 	rpcServer := &server{
 		ctx:       signing.CreateContext("secp256k1"),
 		validator: api,
@@ -187,13 +187,13 @@ func newRpcServer() *server {
 }
 
 //StartRpcServer starts RPC server
-func StartRpcServer() {
+func StartRpcServer(url string) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterMarketServer(s, newRpcServer())
+	pb.RegisterMarketServer(s, newRpcServer(url))
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {

@@ -167,21 +167,15 @@ func CreateOffer(txnKey, batchKey *Signer, identifier, label, description string
 	srcAssetAdd := addresser.MakeAssetAddress(source.Asset)
 	offerAdd := addresser.MakeOfferAddress(identifier)
 	srcHoldingAdd := addresser.MakeHoldingAddress(source.HoldingId)
-	targetHoldingAdd := addresser.MakeHoldingAddress(target.HoldingId)
-	targetAssetAdd := addresser.MakeAssetAddress(source.Asset)
+
 	inputs := []string{accountAdd, srcAssetAdd, offerAdd, srcHoldingAdd}
 	log.Println("creating offer with src asset:" + source.Asset + "-" + srcAssetAdd)
 
-	if target != nil {
-		inputs = append(inputs, targetHoldingAdd)
-		inputs = append(inputs, targetAssetAdd)
-	}
-	outputs := []string{offerAdd}
-	if target.HoldingId != "" {
+	if target != nil && target.HoldingId != "" {
 		inputs = append(inputs, addresser.MakeHoldingAddress(target.HoldingId))
 		inputs = append(inputs, addresser.MakeAssetAddress(target.Asset))
 	}
-
+	outputs := []string{offerAdd}
 	log.Println("creating offer:" + identifier)
 	createOffer := &pb.CreateOffer{
 		Id:             identifier,
@@ -189,9 +183,12 @@ func CreateOffer(txnKey, batchKey *Signer, identifier, label, description string
 		Description:    description,
 		Source:         source.HoldingId,
 		SourceQuantity: source.Quantity,
-		Target:         target.HoldingId,
-		TargetQuantity: target.Quantity,
 		Rules:          rules,
+	}
+
+	if target != nil {
+		createOffer.Target = target.HoldingId
+		createOffer.TargetQuantity = target.Quantity
 	}
 
 	payload := &pb.TransactionPayload{

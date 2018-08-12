@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	//"github.com/alecthomas/kingpin"
+	"github.com/alecthomas/kingpin"
 	api "github.com/rico-bee/leopark/market_api/api"
 	server "github.com/rico-bee/leopark/market_api/server"
 	pb "github.com/rico-bee/leopark/market_service/proto/api"
@@ -12,16 +12,29 @@ import (
 )
 
 const (
-	rpcUrl = "localhost:50051"
-)
-
-var (
-	version string
+	version = "0.0.1"
+	rpcUrl  = "localhost:50051"
 )
 
 func main() {
+	showversion := kingpin.Flag("version", "Show version information.").Short('v').Bool()
+	if *showversion == true {
+		log.Printf("Version: %s\n", version)
+		os.Exit(0)
+	}
+
+	serviceUrl := kingpin.Flag("service", "Service Url.").Default(rpcUrl).Short('s').String()
+	if serviceUrl == nil {
+		log.Fatal("no service url is defined")
+	}
+
+	rethinkdbUrl := kingpin.Flag("database", "rethinkdb Url.").Default("localhost:28015").Short('r').String()
+	if rethinkdbUrl == nil {
+		log.Fatal("no database url is defined")
+	}
+
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(rpcUrl, grpc.WithInsecure())
+	conn, err := grpc.Dial(*serviceUrl, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -29,7 +42,7 @@ func main() {
 	c := pb.NewMarketClient(conn)
 
 	// init db connection
-	db, err := api.NewDBServer("localhost:28015")
+	db, err := api.NewDBServer(*rethinkdbUrl)
 	if err != nil {
 		log.Fatal("failed to connect to DB")
 	}
