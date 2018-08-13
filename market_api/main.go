@@ -32,6 +32,7 @@ func main() {
 	if rethinkdbUrl == nil {
 		log.Fatal("no database url is defined")
 	}
+	kingpin.Parse()
 
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(*serviceUrl, grpc.WithInsecure())

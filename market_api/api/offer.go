@@ -153,17 +153,30 @@ func (h *Handler) CreateOffer(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func mapOfferParticipant(srcId, targetId string, source, target *Holding) *pb.OfferParticipant {
-	p := &pb.OfferParticipant{
-		SrcHolding:    srcId,
-		TargetHolding: targetId,
-		SrcAsset:      source.Asset,
+func mapOfferParticipant(req *AcceptOfferRequest, offer *Offer, holdings map[string]*Holding) (*pb.OfferParticipant, *pb.OfferParticipant) {
+
+	inputAsset := holdings[offer.Source].Asset
+	outputHolding := holdings[offer.Target]
+
+	offerer := &pb.OfferParticipant{
+		SrcHolding:    offer.Source,
+		TargetHolding: offer.Target,
+		SrcAsset:      inputAsset,
 	}
 
-	if target != nil {
-		p.TargetAsset = target.Asset
+	if outputHolding != nil {
+		offerer.TargetAsset = outputHolding.Asset
 	}
-	return p
+
+	receiver := &pb.OfferParticipant{
+		SrcHolding:    req.Source,
+		TargetHolding: req.Target,
+		SrcAsset:      inputAsset,
+	}
+	if outputHolding != nil {
+		receiver.TargetAsset = outputHolding.Asset
+	}
+	return offerer, receiver
 }
 
 func (h *Handler) AcceptOffer(w http.ResponseWriter, r *http.Request) {
@@ -196,14 +209,14 @@ func (h *Handler) AcceptOffer(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	log.Println("holdings" + printObj(holdings))
 	log.Println("source" + printObj(offer))
-	log.Println("create offer" + printObj(acceptOffer))
+	log.Println("accepting offer" + printObj(acceptOffer))
+	offerer, receiver := mapOfferParticipant(acceptOffer, offer, holdings)
 	acceptOfferReq := &pb.AcceptOfferRequest{
 		Identifier: id,
 		Count:      acceptOffer.Count,
-		Sender:     mapOfferParticipant(offer.Source, offer.Target, holdings[offer.Source], holdings[acceptOffer.Target]),
-		Receiver:   mapOfferParticipant(acceptOffer.Source, acceptOffer.Target, holdings[offer.Source], holdings[acceptOffer.Target]),
+		Sender:     offerer,
+		Receiver:   receiver,
 		PrivateKey: auth.PrivateKey,
 	}
 	res, err := h.RpcClient.DoAcceptOffer(ctx, acceptOfferReq)

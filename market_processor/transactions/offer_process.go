@@ -343,42 +343,44 @@ func (a *OfferAcceptance) validateAccountsLimitedTo() error {
 }
 
 func (a *OfferAcceptance) handleOffererSource(inputQuantity int64) ([]string, error) {
-	if isHoldingInfinite(a.offerer.SrcAsset, a.offerer.SrcHolding.Account) {
-		return a.state.UpdateHolding(a.offerer.SrcHolding.Id, inputQuantity)
+	if !isHoldingInfinite(a.offerer.SrcAsset, a.offerer.SrcHolding.Account) {
+		return a.state.UpdateHolding(a.offerer.SrcHolding.Id, a.offerer.SrcHolding.Quantity-inputQuantity)
 	}
-	return []string{}, errors.New("offer cannot be processed")
+	return nil, nil
 }
 
 func (a *OfferAcceptance) handleOffererTarget(inputQuantity int64) ([]string, error) {
 	if a.offer.Target != "" {
-		return a.state.UpdateHolding(a.offerer.TargetHolding.Id, inputQuantity)
+		return a.state.UpdateHolding(a.offerer.TargetHolding.Id, a.offerer.TargetHolding.Quantity+inputQuantity)
 	}
-	return []string{}, errors.New("offer cannot be processed")
+	log.Println("no target defined in offerer")
+	return nil, nil
 }
 
 func (a *OfferAcceptance) handleReceiverSource(outputQuantity int64) ([]string, error) {
 	if a.acceptOffer.Source != "" && !isHoldingInfinite(a.receiver.SrcAsset, a.receiver.SrcHolding.Account) {
-		return a.state.UpdateHolding(a.receiver.SrcHolding.Id, outputQuantity)
+		return a.state.UpdateHolding(a.receiver.SrcHolding.Id, a.receiver.SrcHolding.Quantity-outputQuantity)
 	}
-	return []string{}, errors.New("offer cannot be processed")
+	log.Println("no source defined in receiver")
+	return nil, nil
 }
 
 func (a *OfferAcceptance) handleReceiverTarget(inputQuantity int64) ([]string, error) {
-	return a.state.UpdateHolding(a.receiver.TargetHolding.Id, inputQuantity)
+	return a.state.UpdateHolding(a.receiver.TargetHolding.Id, a.receiver.TargetHolding.Quantity+inputQuantity)
 }
 
 func (a *OfferAcceptance) handleOncePerAccount() ([]string, error) {
 	if exchangeOncePerAccount(a.offer) {
 		return a.state.SaveOfferAccountReceipt(a.offer.Id, a.header.SignerPublicKey)
 	}
-	return []string{}, errors.New("holding cannot be processed")
+	return nil, nil
 }
 
 func (a *OfferAcceptance) handleExchangeOnce() ([]string, error) {
 	if exchangeOnce(a.offer) {
 		return a.state.SaveOfferReceipt(a.offer.Id)
 	}
-	return []string{}, errors.New("holding cannot be processed")
+	return nil, nil
 }
 
 func handleOfferAcceptance(acceptOffer *pb.AcceptOffer, header *pb2.TransactionHeader, state *MarketState) ([]string, error) {
@@ -390,7 +392,7 @@ func handleOfferAcceptance(acceptOffer *pb.AcceptOffer, header *pb2.TransactionH
 	if offer == nil || offer.Status != pb.Offer_OPEN {
 		return []string{}, errors.New("Offer is not valid")
 	}
-
+	log.Println("handling offer acceptance")
 	offerAcceptance := newOfferAcceptance(acceptOffer, header, state)
 	err = offerAcceptance.validateExchangeOnce()
 	if err != nil {
@@ -399,32 +401,32 @@ func handleOfferAcceptance(acceptOffer *pb.AcceptOffer, header *pb2.TransactionH
 	}
 	err = offerAcceptance.validateOncePerAccount()
 	if err != nil {
-		log.Println("failed to process offer acceptance")
+		log.Println("failed to process offer acceptance: validateOncePerAccount")
 		return nil, err
 	}
 	err = offerAcceptance.validateAccountsLimitedTo()
 	if err != nil {
-		log.Println("failed to process offer acceptance")
+		log.Println("failed to process offer acceptance: validateAccountsLimitedTo")
 		return nil, err
 	}
 	err = offerAcceptance.validateOutputHoldingExists()
 	if err != nil {
-		log.Println("failed to process offer acceptance")
+		log.Println("failed to process offer acceptance: validateOutputHoldingExists")
 		return nil, err
 	}
 	err = offerAcceptance.validateInputHoldingExists()
 	if err != nil {
-		log.Println("failed to process offer acceptance")
+		log.Println("failed to process offer acceptance: validateInputHoldingExists")
 		return nil, err
 	}
 	err = offerAcceptance.validateInputHoldingAssets()
 	if err != nil {
-		log.Println("failed to process offer acceptance")
+		log.Println("failed to process offer acceptance: validateInputHoldingAssets")
 		return nil, err
 	}
 	err = offerAcceptance.validateOutputHoldingAssets()
 	if err != nil {
-		log.Println("failed to process offer acceptance")
+		log.Println("failed to process offer acceptance: validateOutputHoldingAssets")
 		return nil, err
 	}
 
@@ -435,34 +437,41 @@ func handleOfferAcceptance(acceptOffer *pb.AcceptOffer, header *pb2.TransactionH
 
 	err = offerAcceptance.validateOutputEnough(calculator.outputQuantity())
 	if err != nil {
-		log.Println("failed to process offer acceptance")
+		log.Println("failed to process offer acceptance: validateOutputEnough")
 		return nil, err
 	}
 	err = offerAcceptance.validateInputEnough(calculator.inputQuantity())
 	if err != nil {
-		log.Println("failed to process offer acceptance")
+		log.Println("failed to process offer acceptance: validateInputEnough")
 		return nil, err
 	}
 
+	log.Println("passed all validation in acceptance")
 	ret, err := offerAcceptance.handleOffererSource(calculator.inputQuantity())
 	if err != nil {
+		log.Println("failed to handle handleOffererSource in acceptance")
 		return ret, err
 	}
 	ret, err = offerAcceptance.handleOffererTarget(calculator.outputQuantity())
 	if err != nil {
+		log.Println("failed to handle handleOffererTarget in acceptance")
 		return ret, err
 	}
 	ret, err = offerAcceptance.handleReceiverSource(calculator.outputQuantity())
 	if err != nil {
+		log.Println("failed to handle handleReceiverSource in acceptance")
 		return ret, err
 	}
 	ret, err = offerAcceptance.handleReceiverTarget(calculator.inputQuantity())
 	if err != nil {
+		log.Println("failed to handle handleReceiverTarget in acceptance")
 		return ret, err
 	}
 	ret, err = offerAcceptance.handleOncePerAccount()
 	if err != nil {
+		log.Println("failed to handle handleOncePerAccount in acceptance")
 		return ret, err
 	}
+
 	return offerAcceptance.handleExchangeOnce()
 }

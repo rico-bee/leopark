@@ -77,17 +77,18 @@ func (db *DbServer) FindAsset(name string) (*Asset, error) {
 }
 
 func (s *DbServer) FindUser(email string) (*crypto.AuthInfo, error) {
-	cursor, err := r.DB("market").Table("auth").Run(s.session)
+	cursor, err := r.DB("market").Table("auth").Filter(r.Row.Field("email").Eq(email)).Run(s.session)
 	if err != nil {
 		return nil, err
 	}
+
 	var auth crypto.AuthInfo
 	err = cursor.One(&auth)
 	if err != nil {
 		log.Println("query error:" + err.Error())
 	}
 	cursor.Close()
-	log.Println(auth.Email)
+	log.Println("found account: " + auth.Email)
 	return &auth, err
 }
 

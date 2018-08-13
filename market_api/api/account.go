@@ -102,16 +102,18 @@ func (h *Handler) FindAuthorisation(w http.ResponseWriter, r *http.Request) {
 	authorise := &FindAuthorisationRequest{}
 	bindRequestBody(r, authorise)
 	// Contact the server and print out its response.
-
 	auth, err := h.Db.FindUser(authorise.Email)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Your username doesn't exist"))
+		return
 	}
 	var account *AccountResponse
 	if !crypto.CheckPasswordHash(authorise.Password, auth.PwdHash) {
-		log.Println("invalid password....")
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Your password is invalid"))
+		return
 	} else {
 		tokenString, err := crypto.GenerateAuthToken(auth)
 		if err != nil {
