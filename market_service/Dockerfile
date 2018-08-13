@@ -10,4 +10,3 @@ RUN GOOS=linux go build -o market-service
 FROM leopark:golang-runtime
 WORKDIR /app
 COPY --from=build-env /go/src/github.com/rico-bee/leopark/market_service/market-service /app/
-ENTRYPOINT [ "./market-service" ] 

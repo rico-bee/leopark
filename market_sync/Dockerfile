@@ -9,5 +9,4 @@ RUN GOOS=linux go build -o market-sync
 # final stage
 FROM leopark:golang-runtime
 WORKDIR /app
-COPY --from=build-env /go/src/github.com/rico-bee/leopark/market_sync/market-sync /app/
-ENTRYPOINT [ "./market-sync" ] 
+COPY --from=build-env /go/src/github.com/rico-bee/leopark/market_sync/market-sync /app/ 

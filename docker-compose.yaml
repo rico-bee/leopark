@@ -86,81 +86,75 @@ services:
       - "28015:28015"   
       - "29015:29015"   
 
-  # market-processor:
-  #   build: ./market_processor
-  #   image: leopark:market-processor
-  #   container_name: market-processor
-  #   volumes:
-  #     - '.:/project/leopark-marketplace'
-  #   depends_on:
-  #     - market-shell
-  #     - validator
-  #   command: |
-  #     bash -c "
-  #       sleep 1 &&
-  #       market-processor -d tcp://validator:4004"   
+  market-processor:
+    build: ./market_processor
+    image: leopark:market-processor
+    container_name: market-processor
+    volumes:
+      - '.:/project/leopark-marketplace'
+    depends_on:
+      - market-shell
+      - validator
+    command: |
+      bash -c "
+        sleep 1 &&
+        /app/market-processor -d tcp://validator:4004"   
 
-  # market-service:
-  #   build: ./market_service
-  #   image: leopark:market-service
-  #   container_name: market-service
-  #   volumes:
-  #     - '.:/project/leopark-marketplace'
-  #   depends_on:
-  #     - market-shell
-  #     - validator
-  #   expose:
-  #     - 50051  
-  #   ports:
-  #     - '50051:50051'
-  #   command: |
-  #     bash -c "
-  #       sleep 1 &&
-  #       market-service -d tcp://validator:4004"  
+  market-service:
+    build: ./market_service
+    image: leopark:market-service
+    container_name: market-service
+    depends_on:
+      - market-shell
+      - validator
+    expose:
+      - 50051  
+    ports:
+      - '50051:50051'
+    command: |
+      bash -c "
+        sleep 1 &&
+        /app/market-service -d tcp://validator:4004"  
 
-  # market-sync:
-  #   build: ./market_sync
-  #   image: leopark:market-sync
-  #   container_name: market-sync
-  #   volumes:
-  #     - '.:/project/leopark-marketplace'
-  #   depends_on:
-  #     - market-shell
-  #     - validator
-  #     - rethinkdb
-  #   command: |
-  #     bash -c "
-  #       sleep 1 &&
-  #       market-sync -d tcp://validator:4004 -r rethinkdb:28015" 
+  market-sync:
+    build: ./market_sync
+    image: leopark:market-sync
+    container_name: market-sync
+    depends_on:
+      - market-shell
+      - validator
+      - rethinkdb
+    command: |
+      bash -c "
+        sleep 1 &&
+        /app/market-sync -d tcp://validator:4004 -r rethinkdb:28015" 
 
-  # market-api:
-  #   build: ./market_api
-  #   image: leopark:market-api
-  #   container_name: market-api
-  #   volumes:
-  #     - '.:/project/leopark-marketplace'
-  #   expose: 
-  #     - 8088
-  #   ports:
-  #     - '8000:8088'    
-  #   depends_on:
-  #     - market-shell
-  #     - market-service
-  #     - rethinkdb
-  #   command: |
-  #     bash -c "
-  #     sleep 1 && market-api -r rethinkdb:28015 -s market-service:50051"     
+  market-api:
+    build: ./market_api
+    image: leopark:market-api
+    container_name: market-api
+    expose: 
+      - 8088
+    ports:
+      - '8000:8088'    
+    depends_on:
+      - market-shell
+      - market-service
+      - rethinkdb
+    command: |
+      sh -c "
+      sleep 1 && market-api -r rethinkdb:28015 -s market-service:50051"     
   
-  # market-app:
-  #   build: ./market_app
-  #   image: leopark:market-app
-  #   container_name: market-app
-  #   volumes:
-  #     - ./market_app/public/:/usr/local/apache2/htdocs/
-  #   expose:
-  #     - 80
-  #   ports:
-  #     - '8041:80'
-  #   depends_on:
-  #     - market-shell
-  #     - market-api
+  market-app:
+    build: ./market_app
+    image: leopark:market-app
+    container_name: market-app
+    volumes:
+      - ./market_app/public/:/usr/local/apache2/htdocs/
+    expose:
+      - 80
+    ports:
+      - '8041:80'
+    depends_on:
+      - market-shell
+      - market-api
