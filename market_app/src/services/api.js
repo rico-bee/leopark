@@ -19,8 +19,7 @@
 const m = require('mithril')
 const _ = require('lodash')
 
-// const API_PATH = 'http://localhost:8088/'
-const API_PATH = '/api'
+const API_PATH = 'api/'
 const STORAGE_KEY = 'sawbuck_manager.authorization'
 let authToken = null
 
