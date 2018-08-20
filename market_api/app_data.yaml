@@ -19,14 +19,35 @@ accounts:
     email: admin@leotech.com.au
     password: password
     assets:
-      - name: LEOCoin
+      - name: LEO
+        description: Leo Coin - The cryptocurrency that fits in your pocket
+        rules:
+          - type: OWNER_HOLDINGS_INFINITE
+      - name: LOD
         description: The cryptocurrency that fits in your pocket
         rules:
           - type: OWNER_HOLDINGS_INFINITE
+      - name: LVP
+        description: The voting power which weighs in your reward
+        rules:
+          - type: OWNER_HOLDINGS_INFINITE         
+          - type: NOT_TRANSFERABLE
+
     holdings:
-      - label: LEOCoin Source
-        description: An unlimited supply new LEOCoin
-        asset: LEOCoin
+      - label: LEO Coin Owner account
+        description: An unlimited supply new LEO Coin
+        asset: LEO
         quantity: 9007199254740991
+
+      - label: LEO Dollar Owner account
+        description: An unlimited supply new LEO Dollar
+        asset: LOD
+        quantity: 9007199254740991
+      
+      - label: LEO Voting Power
+        description: An unlimited supply new LEO Voting Power
+        asset: LVP
+        quantity: 9007199254740991
+
     renewables: []
       

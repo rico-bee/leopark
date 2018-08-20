@@ -83,7 +83,7 @@ func (server *Server) Start() {
 	m.HandleFunc("/offer/{id}/accept", server.api.AcceptOffer).Methods("PATCH")
 	m.HandleFunc("/offer/{id}/close", server.api.CloseOffer).Methods("PATCH")
 	m.HandleFunc("/holding", server.api.CreateHolding).Methods("POST")
-
+	r.HandleFunc("/holding", server.api.FetchHoldings).Methods("GET")
 	m.Use(jwtMiddleware)
 	corsHandler := handlers.CORS(originsOk, headersOk, methodsOk)(r)
 	http.ListenAndServe(":8088", corsHandler)

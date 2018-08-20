@@ -140,7 +140,7 @@ func main() {
 		if err != nil {
 			log.Println("failed to create auth for user:" + auth.Email)
 		}
-
+		time.Sleep(5 * time.Second)
 		for _, a := range p.Assets {
 			aReq := &pb.CreateAssetRequest{
 				Name:        a.Name,
@@ -152,6 +152,7 @@ func main() {
 			if err != nil {
 				log.Fatal("rpc failed:" + err.Error())
 			}
+			time.Sleep(5 * time.Second)
 		}
 
 		for _, h := range p.Holdings {
@@ -169,6 +170,7 @@ func main() {
 			if err != nil {
 				log.Println("rpc failed:" + err.Error())
 			}
+			time.Sleep(5 * time.Second)
 		}
 	}
 }

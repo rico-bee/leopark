@@ -168,7 +168,7 @@ func (s *DbServer) FindAccount(publicKey string) *Account {
 	return &acc
 }
 
-func (s *DbServer) FetchOffers(queryParams map[string]interface{}) ([]Offer, error) {
+func (s *DbServer) FetchOffers(queryParams map[string]interface{}) ([]*Offer, error) {
 	table := r.DB("market").Table("offer")
 	blkNum, err := s.latestBlockNum()
 	if err != nil {
@@ -178,16 +178,25 @@ func (s *DbServer) FetchOffers(queryParams map[string]interface{}) ([]Offer, err
 		Filter(func(row r.Term) r.Term {
 			return row.Field("start_block_num").Le(blkNum).And(row.Field("end_block_num").Gt(blkNum))
 		}).
+		Merge(func(offer r.Term) interface{} {
+			return map[string]interface{}{"targetHoldings": s.FetchHoldings(r.Args([]interface{}{offer.Field("target")}))}
+		}).
 		Without("start_block_num", "end_block_num", "delta_id", "account").CoerceTo("array").Run(s.session)
+
 	if err != nil {
 		log.Println("cannot get offers from db:" + err.Error())
 		return nil, err
 	}
-	offers := []Offer{}
+	offers := []*Offer{}
 	err = cursor.All(&offers)
 	if err != nil {
 		log.Println("cannot get offers from cursor:" + err.Error())
 		return nil, err
+	}
+	for _, o := range offers {
+		if o.TargetHoldings != nil && len(o.TargetHoldings) > 0 {
+			o.TargetAsset = o.TargetHoldings[0].Asset
+		}
 	}
 	return offers, nil
 }

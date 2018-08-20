@@ -6,12 +6,34 @@ import (
 	"golang.org/x/net/context"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
 func PrintObj(msg interface{}) string {
 	data, _ := json.Marshal(msg)
 	return string(data)
+}
+
+func DecodeIds(idStr string) []string {
+	return strings.Split(idStr, ",")
+}
+
+func (h *Handler) FetchHoldings(w http.ResponseWriter, r *http.Request) {
+	//_, err := h.CurrentUser(w, r)
+	params := r.URL.Query()
+	ids := params["id"]
+	d, err := json.Marshal(ids)
+	log.Println("ids:" + string(d))
+	holdings := h.Db.FetchHoldingsByIds(ids)
+	data, err := json.Marshal(holdings)
+	if err != nil {
+		log.Println("failed to serialise assets:" + err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 func (h *Handler) CreateHolding(w http.ResponseWriter, r *http.Request) {

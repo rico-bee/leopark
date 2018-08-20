@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
-	"time"
 )
 
 const (
@@ -39,12 +38,12 @@ func (s *server) DoCreateAccount(ctx context.Context, in *pb.CreateAccountReques
 		log.Println("failed to send batch request")
 	}
 	log.Println("creating account for : " + in.Email)
-	batchIds := []string{signature}
-	time.Sleep(5 * time.Second)
-	committed, err := s.validator.CheckBatchStatus(batchIds)
-	if !committed {
-		return nil, err
-	}
+	// batchIds := []string{signature}
+	// time.Sleep(5 * time.Second)
+	// committed, err := s.validator.CheckBatchStatus(batchIds)
+	// if !committed {
+	// 	return nil, err
+	// }
 	return &pb.CreateAccountResponse{
 		PrivateKey: privateKey.AsHex(),
 		PublicKey:  signer.GetPublicKey().AsHex(),
@@ -75,12 +74,12 @@ func (s *server) DoCreateAsset(ctx context.Context, in *pb.CreateAssetRequest) (
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
-	batchIds := []string{signature}
-	time.Sleep(5 * time.Second)
-	committed, err := s.validator.CheckBatchStatus(batchIds)
-	if !committed {
-		return nil, err
-	}
+	// batchIds := []string{signature}
+	// time.Sleep(5 * time.Second)
+	// committed, err := s.validator.CheckBatchStatus(batchIds)
+	// if !committed {
+	// 	return nil, err
+	// }
 	return &pb.CreateAssetResponse{Message: "success"}, nil
 }
 
@@ -105,12 +104,12 @@ func (s *server) DoCreateHolding(ctx context.Context, req *pb.CreateHoldingReque
 		log.Println("failed to send batch request")
 	}
 	log.Println("holding created: " + req.Asset)
-	batchIds := []string{signature}
-	time.Sleep(5 * time.Second)
-	committed, err := s.validator.CheckBatchStatus(batchIds)
-	if !committed {
-		return nil, err
-	}
+	// batchIds := []string{signature}
+	// time.Sleep(5 * time.Second)
+	// committed, err := s.validator.CheckBatchStatus(batchIds)
+	// if !committed {
+	// 	return nil, err
+	// }
 	return &pb.CreateHoldingResponse{Id: id}, nil
 }
 
@@ -137,12 +136,12 @@ func (s *server) DoCreateOffer(ctx context.Context, req *pb.CreateOfferRequest) 
 	if err != nil {
 		log.Println("failed to send batch request")
 	}
-	time.Sleep(5 * time.Second)
-	batchIds := []string{signature}
-	committed, err := s.validator.CheckBatchStatus(batchIds)
-	if !committed {
-		return nil, err
-	}
+	// time.Sleep(5 * time.Second)
+	// batchIds := []string{signature}
+	// committed, err := s.validator.CheckBatchStatus(batchIds)
+	// if !committed {
+	// 	return nil, err
+	// }
 	return &pb.CreateOfferResponse{Id: id}, nil
 }
 

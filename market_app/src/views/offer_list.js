@@ -98,7 +98,7 @@ const OfferListPage = {
         vnode.state.offers = offers.map(offer => {
           return _.assign({
             sourceAsset: holdingAssets[offer.source],
-            targetAsset: holdingAssets[offer.target]
+            targetAsset: holdingAssets[offer.targetAsset]
           }, offer)
         })
         // If logged in, save account to state with asset quantities

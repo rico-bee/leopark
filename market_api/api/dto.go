@@ -84,6 +84,10 @@ type CreateHoldingRequest struct {
 	Quantity    int64  `json:"quantity"`
 }
 
+type FetchHoldingRequest struct {
+	Holdings []string `json:"holdings"`
+}
+
 type CreateHoldingResponse struct {
 	Id string `json:"id"`
 }

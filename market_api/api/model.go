@@ -31,14 +31,16 @@ type Holding struct {
 }
 
 type Offer struct {
-	Id             string   `gorethink:"id" json:"id,omitempty"`
-	Label          string   `gorethink:"label" json:"label,omitempty"`
-	Description    string   `gorethink:"description" json:"description,omitempty"`
-	Owners         []string `gorethink:"owners" json:"owners,omitempty"`
-	Source         string   `gorethink:"source" json:"source,omitempty"`
-	SourceQuantity int64    `gorethink:"source_quantity" json:"source_quantity,omitempty"`
-	Target         string   `gorethink:"target" json:"target,omitempty"`
-	TargetQuantity int64    `gorethink:"target_quantity" json:"target_quantity,omitempty"`
-	Rules          []*Rule  `gorethink:"rules" json:"rules,omitempty"`
-	Status         int32    `gorethink:"status" json:"status,omitempty"`
+	Id             string     `gorethink:"id" json:"id,omitempty"`
+	Label          string     `gorethink:"label" json:"label,omitempty"`
+	Description    string     `gorethink:"description" json:"description,omitempty"`
+	Owners         []string   `gorethink:"owners" json:"owners,omitempty"`
+	Source         string     `gorethink:"source" json:"source,omitempty"`
+	SourceQuantity int64      `gorethink:"source_quantity" json:"source_quantity,omitempty"`
+	Target         string     `gorethink:"target" json:"target,omitempty"`
+	TargetHoldings []*Holding `gorethink:"targetHoldings" json:"-"`
+	TargetAsset    string     `json:"targetAsset,omitempty"`
+	TargetQuantity int64      `gorethink:"target_quantity" json:"target_quantity,omitempty"`
+	Rules          []*Rule    `gorethink:"rules" json:"rules,omitempty"`
+	Status         int32      `gorethink:"status" json:"status,omitempty"`
 }
